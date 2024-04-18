@@ -1,0 +1,31 @@
+variables:
+  - name: TypeSpecRustPkgDir
+    value: $(System.DefaultWorkingDirectory)/packages/typespec-rust
+
+steps:
+  - script: |
+      pnpm install
+      pnpm build
+    displayName: "Build Emitter Sources"
+
+  - script: |
+      pnpm run eslint
+    displayName: "Run Lint"
+    workingDirectory: $(TypeSpecRustPkgDir)
+
+  - script: pnpm run test-ci
+    displayName: Run TypeScript Tests
+
+  - task: PublishTestResults@2
+    inputs:
+      testRunner: JUnit
+      testResultsFiles: $(TypeSpecRustPkgDir)/test-results.xml
+      failTaskOnFailedTests: true
+
+  - script: pnpm run merge-coverage
+    displayName: Merge code coverage
+
+  - task: PublishCodeCoverageResults@2
+    inputs:
+      summaryFileLocation: $(TypeSpecRustPkgDir)/coverage/cobertura-coverage.xml
+    displayName: Publish code coverage

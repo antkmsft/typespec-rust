@@ -40,6 +40,9 @@ bld/
 # Visual Studio 2017 auto generated files
 Generated\ Files/
 
+# JUnit test results
+**/test-results.xml
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
@@ -151,6 +154,9 @@ coverage*.info
 *.coverage
 *.coveragexml
 
+# Cobertura code coverage results
+**/coverage/**/cobertura-coverage.xml
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml
@@ -197,9 +203,9 @@ PublishScripts/
 # NuGet Symbol Packages
 *.snupkg
 # The packages folder can be ignored because of Package Restore
-**/[Pp]ackages/*
+# **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
-!**/[Pp]ackages/build/
+# !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
@@ -396,3 +402,5 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+**/dist/*

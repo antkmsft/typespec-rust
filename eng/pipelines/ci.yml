@@ -1,0 +1,32 @@
+trigger:
+  branches:
+    include:
+      - main
+      - feature/*
+      - hotfix/*
+      - release/*
+
+pr:
+  branches:
+    include:
+      - main
+      - feature/*
+      - hotfix/*
+      - release/*
+
+jobs:
+  - job: "TypeSpec_Rust_CI"
+    displayName: "Run TypeSpec Rust CI Checks"
+
+    strategy:
+      matrix:
+        Linux:
+          vm.image: "ubuntu-22.04"
+
+    pool:
+      vmImage: "$(vm.image)"
+
+    steps:
+      - template: ../steps/set-env.yaml
+
+      - template: ../steps/build-test.yaml
