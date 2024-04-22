@@ -1,0 +1,40 @@
+trigger:
+  branches:
+    include:
+      - main
+      - feature/*
+      - hotfix/*
+      - release/*
+
+pr:
+  branches:
+    include:
+      - main
+      - feature/*
+      - hotfix/*
+      - release/*
+
+extends:
+  template: /eng/pipelines/templates/stages/1es-redirect.yml
+  parameters:
+    Use1ESOfficial: false
+    stages:
+      - stage: "TypeSpec_Rust_CI"
+        jobs:
+          - job: "TypeSpec_Rust_CI"
+            displayName: "Run TypeSpec Rust CI Checks"
+
+            variables:
+              - template: /eng/pipelines/templates/variables/image.yml
+              - name: TypeSpecRustPkgDir
+                value: $(System.DefaultWorkingDirectory)/packages/typespec-rust
+
+            pool:
+              image: $(LINUXNEXTVMIMAGE)
+              name: $(LINUXNEXTPOOL)
+              os: linux
+
+            steps:
+              - template: /eng/pipelines/templates/steps/set-env.yaml
+
+              - template: /eng/pipelines/templates/steps/build-test.yaml
