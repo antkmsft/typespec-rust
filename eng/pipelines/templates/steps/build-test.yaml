@@ -1,7 +1,3 @@
-variables:
-  - name: TypeSpecRustPkgDir
-    value: $(System.DefaultWorkingDirectory)/packages/typespec-rust
-
 steps:
   - script: |
       pnpm install

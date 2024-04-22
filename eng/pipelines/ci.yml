@@ -14,22 +14,27 @@ pr:
       - hotfix/*
       - release/*
 
-jobs:
-  - job: "TypeSpec_Rust_CI"
-    displayName: "Run TypeSpec Rust CI Checks"
+extends:
+  template: /eng/pipelines/templates/stages/1es-redirect.yml
+  parameters:
+    Use1ESOfficial: false
+    stages:
+      - stage: "TypeSpec_Rust_CI"
+        jobs:
+          - job: "TypeSpec_Rust_CI"
+            displayName: "Run TypeSpec Rust CI Checks"
 
-    strategy:
-      matrix:
-        Linux:
-          image: $(LINUXNEXTVMIMAGE)
-          pool: $(LINUXPOOL)
+            variables:
+              - template: /eng/pipelines/templates/variables/image.yml
+              - name: TypeSpecRustPkgDir
+                value: $(System.DefaultWorkingDirectory)/packages/typespec-rust
 
-    pool:
-      name: $(pool)
-      image: "$(image)"
-      os: linux
+            pool:
+              image: $(LINUXNEXTVMIMAGE)
+              name: $(LINUXNEXTPOOL)
+              os: linux
 
-    steps:
-      - template: ../steps/set-env.yaml
+            steps:
+              - template: /eng/pipelines/templates/steps/set-env.yaml
 
-      - template: ../steps/build-test.yaml
+              - template: /eng/pipelines/templates/steps/build-test.yaml
