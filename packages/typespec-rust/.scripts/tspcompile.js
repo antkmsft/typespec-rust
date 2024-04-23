@@ -10,7 +10,7 @@ const pkgRoot = execSync('git rev-parse --show-toplevel').toString().trim() + '/
 
 const tspRoot = pkgRoot + 'node_modules/@azure-tools/cadl-ranch-specs/http/';
 
-const compiler = pkgRoot + 'node_modules/@typespec/compiler/node_modules/.bin/tsp';
+const compiler = pkgRoot + 'node_modules/@typespec/compiler/cmd/tsp.js';
 
 // the format is as follows
 // 'crateName': [ 'input', 'additional arg 1', 'additional arg N...' ]
@@ -143,7 +143,7 @@ function generate(crate, input, outputDir, additionalArgs) {
       options.push(`--option="@azure-tools/typespec-rust.crate-name=${crate}"`);
       options.push(`--option="@azure-tools/typespec-rust.crate-version=0.1.0"`);
       options.push(`--option="@azure-tools/typespec-rust.emitter-output-dir=${fullOutputDir}"`);
-      const command = `${compiler} compile ${input} --emit=${pkgRoot} ${options.join(' ')} ${additionalArgs.join(' ')}`;
+      const command = `node ${compiler} compile ${input} --emit=${pkgRoot} ${options.join(' ')} ${additionalArgs.join(' ')}`;
       if (switches.includes('--verbose')) {
         console.log(command);
       }
