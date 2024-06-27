@@ -36,15 +36,6 @@ export function emitPub(pub: boolean): string {
 // returns the type declaration string for the specified Rust type
 export function getTypeDeclaration(type: rust.Type): string {
   switch (type.kind) {
-    case 'empty':
-      return '()';
-    case 'generic': {
-      const typeParams = new Array<string>();
-      for (const typep of type.types) {
-        typeParams.push(getTypeDeclaration(typep));
-      }
-      return `${type.name}<${typeParams.join(', ')}>`;
-    }
     case 'hashmap':
       return `${type.name}<String, ${getTypeDeclaration(type.type)}>`;
     case 'implTrait':
@@ -54,6 +45,8 @@ export function getTypeDeclaration(type: rust.Type): string {
     case 'option':
       return `Option<${type.ref ? '&' : ''}${getTypeDeclaration(type.type)}>`;
     case 'requestContent':
+    case 'response':
+    case 'result':
       return `${type.name}<${getTypeDeclaration(type.type)}>`;
     case 'String':
     case 'str':
@@ -67,6 +60,8 @@ export function getTypeDeclaration(type: rust.Type): string {
     case 'offsetDateTime':
     case 'struct':
       return type.name;
+    case 'unit':
+      return '()';      
     case 'vector':
       return `Vec<${getTypeDeclaration(type.type)}>`;
   }
