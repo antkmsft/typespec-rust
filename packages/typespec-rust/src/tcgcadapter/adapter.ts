@@ -72,6 +72,11 @@ export class Adapter {
     }
 
     for (const model of this.ctx.sdkPackage.models) {
+      if (model.usage === tcgc.UsageFlags.Error) {
+        // if the model is purely used for errors then
+        // skip it as we use azure_core::Error.
+        continue;
+      }
       const rustModel = this.getModel(model);
       this.crate.models.push(rustModel);
     }
@@ -109,7 +114,8 @@ export class Adapter {
       return <rust.Model>rustModel;
     }
     rustModel = new rust.Model(modelName, isPub(model.access));
-    rustModel.docs = model.description;
+    rustModel.docs.summary = model.summary;
+    rustModel.docs.description = model.doc;
     this.types.set(modelName, rustModel);
 
     for (const property of model.properties) {
@@ -128,7 +134,8 @@ export class Adapter {
   private getModelField(property: tcgc.SdkBodyModelPropertyType): rust.ModelField {
     const fieldType = new rust.Option(this.getType(property.type), false);
     const modelField = new rust.ModelField(naming.getEscapedReservedName(snakeCaseName(property.name), 'prop'), property.serializedName, true, fieldType);
-    modelField.docs = property.description;
+    modelField.docs.summary = property.summary;
+    modelField.docs.description = property.doc;
     return modelField;
   }
 
@@ -171,15 +178,6 @@ export class Adapter {
     };
 
     switch (type.kind) {
-      case 'any': {
-        let anyType = this.types.get(type.kind);
-        if (anyType) {
-          return anyType;
-        }
-        anyType = new rust.JsonValue(this.crate);
-        this.types.set(type.kind, anyType);
-        return anyType;
-      }
       case 'array': {
         const keyName = recursiveKeyName(type.kind, type.valueType);
         let vectorType = this.types.get(keyName);
@@ -237,6 +235,15 @@ export class Adapter {
         stringType = new rust.StringType();
         this.types.set(type.kind, stringType);
         return stringType;
+      }
+      case 'unknown': {
+        let anyType = this.types.get(type.kind);
+        if (anyType) {
+          return anyType;
+        }
+        anyType = new rust.JsonValue(this.crate);
+        this.types.set(type.kind, anyType);
+        return anyType;
       }
       case 'url': {
         let urlType = this.types.get(type.kind);
@@ -328,7 +335,8 @@ export class Adapter {
     }
 
     const rustClient = new rust.Client(clientName);
-    rustClient.docs = client.description;
+    rustClient.docs.summary = client.summary;
+    rustClient.docs.description = client.doc;
     rustClient.parent = parent;
 
     // anything other than public means non-instantiable client
@@ -478,11 +486,12 @@ export class Adapter {
         throw new Error(`method kind ${method.kind} NYI`);
     }
 
-    rustMethod.docs = method.description;
+    rustMethod.docs.summary = method.summary;
+    rustMethod.docs.description = method.doc;
     rustClient.methods.push(rustMethod);
 
     // stuff all of the operation parameters into one array for easy traversal
-    const allOpParams = new Array<OperationParamType>();
+    let allOpParams = new Array<OperationParamType>();
     allOpParams.push(...method.operation.parameters);
     if (method.operation.bodyParam) {
       allOpParams.push(method.operation.bodyParam);
@@ -510,8 +519,25 @@ export class Adapter {
         adaptedParam = this.adaptMethodParameter(opParam);
       }
 
-      adaptedParam.docs = param.description;
+      adaptedParam.docs.summary = param.summary;
+      adaptedParam.docs.description = param.doc;
       rustMethod.params.push(adaptedParam);
+
+      // remove the opParam we just processed
+      allOpParams = allOpParams.filter((v: OperationParamType) => {
+        return v !== opParam;
+      });
+    }
+
+    // client params aren't included in method.parameters so
+    // look for them in the remaining operation parameters.
+    for (const opParam of allOpParams) {
+      if (opParam.onClient) {
+        const adaptedParam = this.adaptMethodParameter(opParam);
+        adaptedParam.docs.summary = opParam.summary;
+        adaptedParam.docs.description = opParam.doc;
+        rustMethod.params.push(adaptedParam);
+      }
     }
 
     let returnType: rust.Type;
@@ -579,7 +605,8 @@ export class Adapter {
         break;
     }
 
-    adaptedParam.docs = param.description;
+    adaptedParam.docs.summary = param.summary;
+    adaptedParam.docs.description = param.doc;
 
     if (paramLoc === 'client') {
       this.clientMethodParams.set(param.name, adaptedParam);
