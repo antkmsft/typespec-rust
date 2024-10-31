@@ -100,7 +100,7 @@ export class Adapter {
       values.push(rustEnumValue);
     }
 
-    rustEnum = new rust.Enum(enumName, isPub(sdkEnum.access), values, !sdkEnum.isFixed);
+    rustEnum = new rust.Enum(enumName, sdkEnum.access === 'public', values, !sdkEnum.isFixed);
     this.types.set(enumName, rustEnum);
 
     return rustEnum;
@@ -116,7 +116,7 @@ export class Adapter {
     if (rustModel) {
       return <rust.Model>rustModel;
     }
-    rustModel = new rust.Model(modelName, isPub(model.access));
+    rustModel = new rust.Model(modelName, model.access === 'internal');
     rustModel.docs.summary = model.summary;
     rustModel.docs.description = model.doc;
     this.types.set(modelName, rustModel);
@@ -484,7 +484,7 @@ export class Adapter {
 
     switch (method.kind) {
       case 'basic':
-        rustMethod = new rust.AsyncMethod(naming.getEscapedReservedName(snakeCaseName(method.name), 'fn'), rustClient, isPub(method.access), new rust.MethodOptions(methodOptionsStruct), httpMethod, httpPath);
+        rustMethod = new rust.AsyncMethod(naming.getEscapedReservedName(snakeCaseName(method.name), 'fn'), rustClient, method.access === 'public', new rust.MethodOptions(methodOptionsStruct), httpMethod, httpPath);
         break;
       case 'paging':
         // TODO: https://github.com/Azure/typespec-rust/issues/60
@@ -671,10 +671,6 @@ export class Adapter {
     }
     return bodyFormat;
   }
-}
-
-function isPub(access?: tcgc.AccessFlags): boolean {
-  return access !== 'internal';
 }
 
 function snakeCaseName(name: string): string {
