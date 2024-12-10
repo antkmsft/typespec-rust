@@ -1,6 +1,6 @@
 # Release History
 
-## 0.4.0 (Unreleased)
+## 0.4.0 (2024-12-10)
 
 ### Breaking Changes
 
@@ -9,6 +9,10 @@
 ### Bugs Fixed
 
 * Pager callbacks will properly clone method options when it contains non-copyable types.
+
+### Features Added
+
+* Added support for required client parameters.
 
 ### Other Changes
 
