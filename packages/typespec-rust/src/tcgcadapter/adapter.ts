@@ -825,6 +825,9 @@ export class Adapter {
         adaptedParam = new rust.BodyParameter(paramName, paramLoc, param.optional, new rust.RequestContent(this.crate, paramType, this.adaptBodyFormat(param.defaultContentType)));
         break;
       }
+      case 'cookie':
+        // TODO: https://github.com/Azure/typespec-rust/issues/192
+        throw new Error('cookie parameters are not supported');
       case 'header':
         if (param.collectionFormat) {
           if (paramType.kind !== 'vector') {
@@ -952,7 +955,7 @@ function snakeCaseName(name: string): string {
   return codegen.deconstruct(name).join('_');
 }
 
-type OperationParamType = tcgc.SdkBodyParameter | tcgc.SdkHeaderParameter | tcgc.SdkPathParameter | tcgc.SdkQueryParameter;
+type OperationParamType = tcgc.SdkBodyParameter | tcgc.SdkCookieParameter | tcgc.SdkHeaderParameter | tcgc.SdkPathParameter | tcgc.SdkQueryParameter;
 
 /**
  * recursively creates a map key from the specified type.
