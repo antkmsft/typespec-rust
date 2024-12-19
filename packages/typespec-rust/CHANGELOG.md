@@ -1,6 +1,6 @@
 # Release History
 
-## 0.5.1 (unreleased)
+## 0.5.1 (2024-12-19)
 
 ### Bugs Fixed
 
@@ -10,6 +10,10 @@
 
 * Added support for model properties of type `path`.
 * Aggregate inherited model properties so they're all in the super-type.
+
+### Other Fixes
+
+* Various codegen changes to clean up Clippy issues.
 
 ## 0.5.0 (2024-12-19)
 
