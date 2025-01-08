@@ -1,6 +1,6 @@
 # Release History
 
-## 0.6.0 (unreleased)
+## 0.6.0 (2025-01-08)
 
 ### Breaking Changes
 
@@ -14,6 +14,10 @@
 ### Features Added
 
 * Added support for TypeSpec `duration` types. Numeric durations are emitted as their respective types. For ISO8601 they're emitted as `String` types.
+
+### Other Changes
+
+* Removed dependency on crate `async-std`.
 
 ## 0.5.1 (2024-12-19)
 
