@@ -1,6 +1,6 @@
 # Release History
 
-## 0.7.0 (unreleased)
+## 0.7.0 (2025-01-17)
 
 ### Breaking Changes
 
@@ -15,6 +15,7 @@
 ### Other Changes
 
 * Various codegen changes to clean up Clippy issues.
+* Updated to the latest tsp toolset.
 
 ## 0.6.0 (2025-01-08)
 
