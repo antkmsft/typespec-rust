@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 import { exec, execSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { semaphore } from './semaphore.js';
 
 // limit to 8 concurrent builds
@@ -175,12 +177,18 @@ function generate(crate, input, outputDir, additionalArgs) {
       if (switches.includes('--verbose')) {
         console.log(command);
       }
+      // delete all generated content before regenerating.
+      // the exception is the lib.rs file. if we delete that
+      // from a crate then concurrent invocations of cargo fmt
+      // will blow up. this is fine anyways since we merge
+      // lib.rs with any preexisting content.
+      fs.rmSync(path.join(fullOutputDir, 'src', 'generated'), { force: true, recursive: true });
       exec(command, function(error, stdout, stderr) {
         // print any output or error from the tsp compile command
         logResult(error, stdout, stderr);
       });
     } catch (err) {
-      console.error(err.output.toString());
+      console.error('\x1b[91m%s\x1b[0m', err);
     } finally {
       sem.leave();
     }
@@ -190,6 +198,11 @@ function generate(crate, input, outputDir, additionalArgs) {
 function logResult(error, stdout, stderr) {
   if (stdout !== '') {
     console.log('stdout: ' + stdout);
+  }
+  if (stderr !== '' && error !== null) {
+    // if both are set just log one
+    console.error('\x1b[91m%s\x1b[0m', 'exec error: ' + error);
+    return;
   }
   if (stderr !== '') {
     console.error('\x1b[91m%s\x1b[0m', 'stderr: ' + stderr);
