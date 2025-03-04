@@ -13,11 +13,50 @@ model BlobServiceClientParameters {
   ...BlobPathParameter;
 }
 
-@@clientInitialization(Storage.Blob.Blob, BlobServiceClientParameters);
-@@clientInitialization(Storage.Blob.AppendBlob, BlobServiceClientParameters);
-@@clientInitialization(Storage.Blob.BlockBlob, BlobServiceClientParameters);
-@@clientInitialization(Storage.Blob.PageBlob, BlobServiceClientParameters);
-@@clientInitialization(Storage.Blob.Container, ContainerNamePathParameter);
+@@clientNamespace(Storage.Blob, "Azure.Storage.Blobs");
+@@clientNamespace(Storage.Blob.Container, "Azure.Storage.Blobs");
+@@clientNamespace(Storage.Blob.Container.Blob, "Azure.Storage.Blobs");
+@@clientNamespace(Storage.Blob.Container.AppendBlob, "Azure.Storage.Blobs");
+@@clientNamespace(Storage.Blob.Container.BlockBlob, "Azure.Storage.Blobs");
+@@clientNamespace(Storage.Blob.Container.PageBlob, "Azure.Storage.Blobs");
+
+@@clientName(Storage.Blob, "BlobServiceClient", "rust");
+@@clientName(Storage.Blob.Container, "BlobContainerClient", "rust");
+@@clientName(Storage.Blob.Container.Blob, "BlobClient", "rust");
+@@clientName(Storage.Blob.Container.AppendBlob, "AppendBlobClient", "rust");
+@@clientName(Storage.Blob.Container.BlockBlob, "BlockBlobClient", "rust");
+@@clientName(Storage.Blob.Container.PageBlob, "PageBlobClient", "rust");
+
+@@clientInitialization(Storage.Blob.Container,
+  {
+    parameters: ContainerNamePathParameter,
+    initializedBy: InitializedBy.parent | InitializedBy.individually,
+  }
+);
+@@clientInitialization(Storage.Blob.Container.Blob,
+  {
+    parameters: BlobServiceClientParameters,
+    initializedBy: InitializedBy.parent | InitializedBy.individually,
+  }
+);
+@@clientInitialization(Storage.Blob.Container.AppendBlob,
+  {
+    parameters: BlobServiceClientParameters,
+    initializedBy: InitializedBy.parent | InitializedBy.individually,
+  }
+);
+@@clientInitialization(Storage.Blob.Container.BlockBlob,
+  {
+    parameters: BlobServiceClientParameters,
+    initializedBy: InitializedBy.parent | InitializedBy.individually,
+  }
+);
+@@clientInitialization(Storage.Blob.Container.PageBlob,
+  {
+    parameters: BlobServiceClientParameters,
+    initializedBy: InitializedBy.parent | InitializedBy.individually,
+  }
+);
 
 @@clientName(ContainerProperties.denyEncryptionScopeOverride,
   "PreventEncryptionScopeOverride"

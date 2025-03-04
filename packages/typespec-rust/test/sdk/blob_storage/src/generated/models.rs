@@ -50,6 +50,22 @@ pub struct AccessPolicy {
     pub start: Option<OffsetDateTime>,
 }
 
+/// Contains results for [`AppendBlobClient::append_block_from_url()`](crate::AppendBlobClient::append_block_from_url())
+#[derive(SafeDebug)]
+pub struct AppendBlobClientAppendBlockFromUrlResult;
+
+/// Contains results for [`AppendBlobClient::append_block()`](crate::AppendBlobClient::append_block())
+#[derive(SafeDebug)]
+pub struct AppendBlobClientAppendBlockResult;
+
+/// Contains results for [`AppendBlobClient::create()`](crate::AppendBlobClient::create())
+#[derive(SafeDebug)]
+pub struct AppendBlobClientCreateResult;
+
+/// Contains results for [`AppendBlobClient::seal()`](crate::AppendBlobClient::seal())
+#[derive(SafeDebug)]
+pub struct AppendBlobClientSealResult;
+
 /// Represents the Apache Arrow configuration.
 #[derive(Clone, Default, Deserialize, SafeDebug, Serialize, azure_core::Model)]
 #[typespec(format = "xml")]
@@ -86,187 +102,147 @@ pub struct ArrowField {
     pub type_prop: Option<String>,
 }
 
-/// Contains results for [`BlobAppendBlobClient::append_block_from_url()`](crate::clients::BlobAppendBlobClient::append_block_from_url())
+/// Contains results for [`BlobClient::abort_copy_from_url()`](crate::BlobClient::abort_copy_from_url())
 #[derive(SafeDebug)]
-pub struct BlobAppendBlobClientAppendBlockFromUrlResult;
+pub struct BlobClientAbortCopyFromUrlResult;
 
-/// Contains results for [`BlobAppendBlobClient::append_block()`](crate::clients::BlobAppendBlobClient::append_block())
+/// Contains results for [`BlobClient::acquire_lease()`](crate::BlobClient::acquire_lease())
 #[derive(SafeDebug)]
-pub struct BlobAppendBlobClientAppendBlockResult;
+pub struct BlobClientAcquireLeaseResult;
 
-/// Contains results for [`BlobAppendBlobClient::create()`](crate::clients::BlobAppendBlobClient::create())
+/// Contains results for [`BlobClient::break_lease()`](crate::BlobClient::break_lease())
 #[derive(SafeDebug)]
-pub struct BlobAppendBlobClientCreateResult;
+pub struct BlobClientBreakLeaseResult;
 
-/// Contains results for [`BlobAppendBlobClient::seal()`](crate::clients::BlobAppendBlobClient::seal())
+/// Contains results for [`BlobClient::change_lease()`](crate::BlobClient::change_lease())
 #[derive(SafeDebug)]
-pub struct BlobAppendBlobClientSealResult;
+pub struct BlobClientChangeLeaseResult;
 
-/// Contains results for [`BlobBlobClient::abort_copy_from_url()`](crate::clients::BlobBlobClient::abort_copy_from_url())
+/// Contains results for [`BlobClient::copy_from_url()`](crate::BlobClient::copy_from_url())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientAbortCopyFromUrlResult;
+pub struct BlobClientCopyFromUrlResult;
 
-/// Contains results for [`BlobBlobClient::acquire_lease()`](crate::clients::BlobBlobClient::acquire_lease())
+/// Contains results for [`BlobClient::create_snapshot()`](crate::BlobClient::create_snapshot())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientAcquireLeaseResult;
+pub struct BlobClientCreateSnapshotResult;
 
-/// Contains results for [`BlobBlobClient::break_lease()`](crate::clients::BlobBlobClient::break_lease())
+/// Contains results for [`BlobClient::delete_immutability_policy()`](crate::BlobClient::delete_immutability_policy())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientBreakLeaseResult;
+pub struct BlobClientDeleteImmutabilityPolicyResult;
 
-/// Contains results for [`BlobBlobClient::change_lease()`](crate::clients::BlobBlobClient::change_lease())
+/// Contains results for [`BlobClient::delete()`](crate::BlobClient::delete())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientChangeLeaseResult;
+pub struct BlobClientDeleteResult;
 
-/// Contains results for [`BlobBlobClient::copy_from_url()`](crate::clients::BlobBlobClient::copy_from_url())
+/// Contains results for [`BlobClient::download()`](crate::BlobClient::download())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientCopyFromUrlResult;
+pub struct BlobClientDownloadResult;
 
-/// Contains results for [`BlobBlobClient::create_snapshot()`](crate::clients::BlobBlobClient::create_snapshot())
+/// Contains results for [`BlobClient::get_account_info()`](crate::BlobClient::get_account_info())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientCreateSnapshotResult;
+pub struct BlobClientGetAccountInfoResult;
 
-/// Contains results for [`BlobBlobClient::delete_immutability_policy()`](crate::clients::BlobBlobClient::delete_immutability_policy())
+/// Contains results for [`BlobClient::get_properties()`](crate::BlobClient::get_properties())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientDeleteImmutabilityPolicyResult;
+pub struct BlobClientGetPropertiesResult;
 
-/// Contains results for [`BlobBlobClient::delete()`](crate::clients::BlobBlobClient::delete())
+/// Contains results for [`BlobClient::release_lease()`](crate::BlobClient::release_lease())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientDeleteResult;
+pub struct BlobClientReleaseLeaseResult;
 
-/// Contains results for [`BlobBlobClient::download()`](crate::clients::BlobBlobClient::download())
+/// Contains results for [`BlobClient::renew_lease()`](crate::BlobClient::renew_lease())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientDownloadResult;
+pub struct BlobClientRenewLeaseResult;
 
-/// Contains results for [`BlobBlobClient::get_account_info()`](crate::clients::BlobBlobClient::get_account_info())
+/// Contains results for [`BlobClient::set_expiry()`](crate::BlobClient::set_expiry())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientGetAccountInfoResult;
+pub struct BlobClientSetExpiryResult;
 
-/// Contains results for [`BlobBlobClient::get_properties()`](crate::clients::BlobBlobClient::get_properties())
+/// Contains results for [`BlobClient::set_http_headers()`](crate::BlobClient::set_http_headers())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientGetPropertiesResult;
+pub struct BlobClientSetHttpHeadersResult;
 
-/// Contains results for [`BlobBlobClient::release_lease()`](crate::clients::BlobBlobClient::release_lease())
+/// Contains results for [`BlobClient::set_immutability_policy()`](crate::BlobClient::set_immutability_policy())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientReleaseLeaseResult;
+pub struct BlobClientSetImmutabilityPolicyResult;
 
-/// Contains results for [`BlobBlobClient::renew_lease()`](crate::clients::BlobBlobClient::renew_lease())
+/// Contains results for [`BlobClient::set_legal_hold()`](crate::BlobClient::set_legal_hold())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientRenewLeaseResult;
+pub struct BlobClientSetLegalHoldResult;
 
-/// Contains results for [`BlobBlobClient::set_expiry()`](crate::clients::BlobBlobClient::set_expiry())
+/// Contains results for [`BlobClient::set_metadata()`](crate::BlobClient::set_metadata())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientSetExpiryResult;
+pub struct BlobClientSetMetadataResult;
 
-/// Contains results for [`BlobBlobClient::set_http_headers()`](crate::clients::BlobBlobClient::set_http_headers())
+/// Contains results for [`BlobClient::set_tags()`](crate::BlobClient::set_tags())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientSetHttpHeadersResult;
+pub struct BlobClientSetTagsResult;
 
-/// Contains results for [`BlobBlobClient::set_immutability_policy()`](crate::clients::BlobBlobClient::set_immutability_policy())
+/// Contains results for [`BlobClient::set_tier()`](crate::BlobClient::set_tier())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientSetImmutabilityPolicyResult;
+pub struct BlobClientSetTierResult;
 
-/// Contains results for [`BlobBlobClient::set_legal_hold()`](crate::clients::BlobBlobClient::set_legal_hold())
+/// Contains results for [`BlobClient::start_copy_from_url()`](crate::BlobClient::start_copy_from_url())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientSetLegalHoldResult;
+pub struct BlobClientStartCopyFromUrlResult;
 
-/// Contains results for [`BlobBlobClient::set_metadata()`](crate::clients::BlobBlobClient::set_metadata())
+/// Contains results for [`BlobClient::undelete()`](crate::BlobClient::undelete())
 #[derive(SafeDebug)]
-pub struct BlobBlobClientSetMetadataResult;
+pub struct BlobClientUndeleteResult;
 
-/// Contains results for [`BlobBlobClient::set_tags()`](crate::clients::BlobBlobClient::set_tags())
-#[derive(SafeDebug)]
-pub struct BlobBlobClientSetTagsResult;
-
-/// Contains results for [`BlobBlobClient::set_tier()`](crate::clients::BlobBlobClient::set_tier())
-#[derive(SafeDebug)]
-pub struct BlobBlobClientSetTierResult;
-
-/// Contains results for [`BlobBlobClient::start_copy_from_url()`](crate::clients::BlobBlobClient::start_copy_from_url())
-#[derive(SafeDebug)]
-pub struct BlobBlobClientStartCopyFromUrlResult;
-
-/// Contains results for [`BlobBlobClient::undelete()`](crate::clients::BlobBlobClient::undelete())
-#[derive(SafeDebug)]
-pub struct BlobBlobClientUndeleteResult;
-
-/// Contains results for [`BlobBlockBlobClient::commit_block_list()`](crate::clients::BlobBlockBlobClient::commit_block_list())
-#[derive(SafeDebug)]
-pub struct BlobBlockBlobClientCommitBlockListResult;
-
-/// Contains results for [`BlobBlockBlobClient::put_blob_from_url()`](crate::clients::BlobBlockBlobClient::put_blob_from_url())
-#[derive(SafeDebug)]
-pub struct BlobBlockBlobClientPutBlobFromUrlResult;
-
-/// Contains results for [`BlobBlockBlobClient::query()`](crate::clients::BlobBlockBlobClient::query())
-#[derive(SafeDebug)]
-pub struct BlobBlockBlobClientQueryResult;
-
-/// Contains results for [`BlobBlockBlobClient::stage_block_from_url()`](crate::clients::BlobBlockBlobClient::stage_block_from_url())
-#[derive(SafeDebug)]
-pub struct BlobBlockBlobClientStageBlockFromUrlResult;
-
-/// Contains results for [`BlobBlockBlobClient::stage_block()`](crate::clients::BlobBlockBlobClient::stage_block())
-#[derive(SafeDebug)]
-pub struct BlobBlockBlobClientStageBlockResult;
-
-/// Contains results for [`BlobBlockBlobClient::upload()`](crate::clients::BlobBlockBlobClient::upload())
-#[derive(SafeDebug)]
-pub struct BlobBlockBlobClientUploadResult;
-
-/// Contains results for [`BlobContainerClient::acquire_lease()`](crate::clients::BlobContainerClient::acquire_lease())
+/// Contains results for [`BlobContainerClient::acquire_lease()`](crate::BlobContainerClient::acquire_lease())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientAcquireLeaseResult;
 
-/// Contains results for [`BlobContainerClient::break_lease()`](crate::clients::BlobContainerClient::break_lease())
+/// Contains results for [`BlobContainerClient::break_lease()`](crate::BlobContainerClient::break_lease())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientBreakLeaseResult;
 
-/// Contains results for [`BlobContainerClient::change_lease()`](crate::clients::BlobContainerClient::change_lease())
+/// Contains results for [`BlobContainerClient::change_lease()`](crate::BlobContainerClient::change_lease())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientChangeLeaseResult;
 
-/// Contains results for [`BlobContainerClient::create()`](crate::clients::BlobContainerClient::create())
+/// Contains results for [`BlobContainerClient::create()`](crate::BlobContainerClient::create())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientCreateResult;
 
-/// Contains results for [`BlobContainerClient::delete()`](crate::clients::BlobContainerClient::delete())
+/// Contains results for [`BlobContainerClient::delete()`](crate::BlobContainerClient::delete())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientDeleteResult;
 
-/// Contains results for [`BlobContainerClient::get_account_info()`](crate::clients::BlobContainerClient::get_account_info())
+/// Contains results for [`BlobContainerClient::get_account_info()`](crate::BlobContainerClient::get_account_info())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientGetAccountInfoResult;
 
-/// Contains results for [`BlobContainerClient::get_properties()`](crate::clients::BlobContainerClient::get_properties())
+/// Contains results for [`BlobContainerClient::get_properties()`](crate::BlobContainerClient::get_properties())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientGetPropertiesResult;
 
-/// Contains results for [`BlobContainerClient::release_lease()`](crate::clients::BlobContainerClient::release_lease())
+/// Contains results for [`BlobContainerClient::release_lease()`](crate::BlobContainerClient::release_lease())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientReleaseLeaseResult;
 
-/// Contains results for [`BlobContainerClient::rename()`](crate::clients::BlobContainerClient::rename())
+/// Contains results for [`BlobContainerClient::rename()`](crate::BlobContainerClient::rename())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientRenameResult;
 
-/// Contains results for [`BlobContainerClient::renew_lease()`](crate::clients::BlobContainerClient::renew_lease())
+/// Contains results for [`BlobContainerClient::renew_lease()`](crate::BlobContainerClient::renew_lease())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientRenewLeaseResult;
 
-/// Contains results for [`BlobContainerClient::restore()`](crate::clients::BlobContainerClient::restore())
+/// Contains results for [`BlobContainerClient::restore()`](crate::BlobContainerClient::restore())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientRestoreResult;
 
-/// Contains results for [`BlobContainerClient::set_access_policy()`](crate::clients::BlobContainerClient::set_access_policy())
+/// Contains results for [`BlobContainerClient::set_access_policy()`](crate::BlobContainerClient::set_access_policy())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientSetAccessPolicyResult;
 
-/// Contains results for [`BlobContainerClient::set_metadata()`](crate::clients::BlobContainerClient::set_metadata())
+/// Contains results for [`BlobContainerClient::set_metadata()`](crate::BlobContainerClient::set_metadata())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientSetMetadataResult;
 
-/// Contains results for [`BlobContainerClient::submit_batch()`](crate::clients::BlobContainerClient::submit_batch())
+/// Contains results for [`BlobContainerClient::submit_batch()`](crate::BlobContainerClient::submit_batch())
 #[derive(SafeDebug)]
 pub struct BlobContainerClientSubmitBatchResult;
 
@@ -384,34 +360,6 @@ pub struct BlobName {
     #[serde(rename = "@Encoded", skip_serializing_if = "Option::is_none")]
     pub encoded: Option<bool>,
 }
-
-/// Contains results for [`BlobPageBlobClient::clear_pages()`](crate::clients::BlobPageBlobClient::clear_pages())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientClearPagesResult;
-
-/// Contains results for [`BlobPageBlobClient::copy_incremental()`](crate::clients::BlobPageBlobClient::copy_incremental())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientCopyIncrementalResult;
-
-/// Contains results for [`BlobPageBlobClient::create()`](crate::clients::BlobPageBlobClient::create())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientCreateResult;
-
-/// Contains results for [`BlobPageBlobClient::resize()`](crate::clients::BlobPageBlobClient::resize())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientResizeResult;
-
-/// Contains results for [`BlobPageBlobClient::update_sequence_number()`](crate::clients::BlobPageBlobClient::update_sequence_number())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientUpdateSequenceNumberResult;
-
-/// Contains results for [`BlobPageBlobClient::upload_pages_from_url()`](crate::clients::BlobPageBlobClient::upload_pages_from_url())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientUploadPagesFromUrlResult;
-
-/// Contains results for [`BlobPageBlobClient::upload_pages()`](crate::clients::BlobPageBlobClient::upload_pages())
-#[derive(SafeDebug)]
-pub struct BlobPageBlobClientUploadPagesResult;
 
 /// Represents a blob prefix.
 #[derive(Clone, Default, Deserialize, SafeDebug, Serialize, azure_core::Model)]
@@ -657,15 +605,15 @@ pub struct BlobPropertiesInternal {
     pub tag_count: Option<i32>,
 }
 
-/// Contains results for [`BlobServiceClient::get_account_info()`](crate::clients::BlobServiceClient::get_account_info())
+/// Contains results for [`BlobServiceClient::get_account_info()`](crate::BlobServiceClient::get_account_info())
 #[derive(SafeDebug)]
 pub struct BlobServiceClientGetAccountInfoResult;
 
-/// Contains results for [`BlobServiceClient::set_properties()`](crate::clients::BlobServiceClient::set_properties())
+/// Contains results for [`BlobServiceClient::set_properties()`](crate::BlobServiceClient::set_properties())
 #[derive(SafeDebug)]
 pub struct BlobServiceClientSetPropertiesResult;
 
-/// Contains results for [`BlobServiceClient::submit_batch()`](crate::clients::BlobServiceClient::submit_batch())
+/// Contains results for [`BlobServiceClient::submit_batch()`](crate::BlobServiceClient::submit_batch())
 #[derive(SafeDebug)]
 pub struct BlobServiceClientSubmitBatchResult;
 
@@ -711,6 +659,30 @@ pub struct Block {
     #[serde(rename = "Size", skip_serializing_if = "Option::is_none")]
     pub size: Option<i64>,
 }
+
+/// Contains results for [`BlockBlobClient::commit_block_list()`](crate::BlockBlobClient::commit_block_list())
+#[derive(SafeDebug)]
+pub struct BlockBlobClientCommitBlockListResult;
+
+/// Contains results for [`BlockBlobClient::put_blob_from_url()`](crate::BlockBlobClient::put_blob_from_url())
+#[derive(SafeDebug)]
+pub struct BlockBlobClientPutBlobFromUrlResult;
+
+/// Contains results for [`BlockBlobClient::query()`](crate::BlockBlobClient::query())
+#[derive(SafeDebug)]
+pub struct BlockBlobClientQueryResult;
+
+/// Contains results for [`BlockBlobClient::stage_block_from_url()`](crate::BlockBlobClient::stage_block_from_url())
+#[derive(SafeDebug)]
+pub struct BlockBlobClientStageBlockFromUrlResult;
+
+/// Contains results for [`BlockBlobClient::stage_block()`](crate::BlockBlobClient::stage_block())
+#[derive(SafeDebug)]
+pub struct BlockBlobClientStageBlockResult;
+
+/// Contains results for [`BlockBlobClient::upload()`](crate::BlockBlobClient::upload())
+#[derive(SafeDebug)]
+pub struct BlockBlobClientUploadResult;
 
 /// Contains the committed and uncommitted blocks in a block blob.
 #[derive(Clone, Default, Deserialize, SafeDebug, Serialize, azure_core::Model)]
@@ -1180,6 +1152,34 @@ pub struct Metrics {
 #[serde(rename = "OrMetadata")]
 #[typespec(format = "xml")]
 pub struct ObjectReplicationMetadata {}
+
+/// Contains results for [`PageBlobClient::clear_pages()`](crate::PageBlobClient::clear_pages())
+#[derive(SafeDebug)]
+pub struct PageBlobClientClearPagesResult;
+
+/// Contains results for [`PageBlobClient::copy_incremental()`](crate::PageBlobClient::copy_incremental())
+#[derive(SafeDebug)]
+pub struct PageBlobClientCopyIncrementalResult;
+
+/// Contains results for [`PageBlobClient::create()`](crate::PageBlobClient::create())
+#[derive(SafeDebug)]
+pub struct PageBlobClientCreateResult;
+
+/// Contains results for [`PageBlobClient::resize()`](crate::PageBlobClient::resize())
+#[derive(SafeDebug)]
+pub struct PageBlobClientResizeResult;
+
+/// Contains results for [`PageBlobClient::update_sequence_number()`](crate::PageBlobClient::update_sequence_number())
+#[derive(SafeDebug)]
+pub struct PageBlobClientUpdateSequenceNumberResult;
+
+/// Contains results for [`PageBlobClient::upload_pages_from_url()`](crate::PageBlobClient::upload_pages_from_url())
+#[derive(SafeDebug)]
+pub struct PageBlobClientUploadPagesFromUrlResult;
+
+/// Contains results for [`PageBlobClient::upload_pages()`](crate::PageBlobClient::upload_pages())
+#[derive(SafeDebug)]
+pub struct PageBlobClientUploadPagesResult;
 
 /// Represents a page list.
 #[derive(Clone, Default, Deserialize, SafeDebug, Serialize, azure_core::Model)]

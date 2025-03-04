@@ -26,7 +26,7 @@ export class Adapter {
     // same as TypeSpec.Xml.@name. however, it's filtered out by default
     // so we need to add it to the allow list of decorators
     const ctx = await tcgc.createSdkContext(context, '@azure-tools/typespec-rust', {
-      additionalDecorators: ['TypeSpec\\.@encodedName'],
+      additionalDecorators: ['TypeSpec\\.@encodedName', '@clientName'],
       disableUsageAccessPropagationToBase: true,
     });
     return new Adapter(ctx, context.options);
@@ -529,7 +529,8 @@ export class Adapter {
    */
   private recursiveAdaptClient(client: tcgc.SdkClientType<tcgc.SdkHttpOperation>, parent?: rust.Client): rust.Client {
     let clientName = client.name;
-    if (parent) {
+    // NOTE: if the client has the @clientName decorator applied then use that verbatim
+    if (parent && !client.decorators.find((decorator) => decorator.name === 'Azure.ClientGenerator.Core.@clientName')) {
       // for hierarchical clients, the child client names are built
       // from the parent client name. this is because tsp allows subclients
       // with the same name. consider the following example.
@@ -744,7 +745,7 @@ export class Adapter {
     for (const method of client.methods) {
       if (method.kind === 'clientaccessor') {
         const subClient = this.recursiveAdaptClient(method.response, rustClient);
-        this.adaptClientAccessor(method, rustClient, subClient);
+        this.adaptClientAccessor(client, method, rustClient, subClient);
       } else {
         this.adaptMethod(method, rustClient);
       }
@@ -824,14 +825,28 @@ export class Adapter {
   /**
    * converts a tcgc client accessor method to a Rust method
    * 
+   * @param client the tcgc client that contains the accessor method
    * @param method the tcgc client accessor method to convert
    * @param rustClient the client to which the method belongs
    * @param subClient the sub-client type that the method returns
    */
-  private adaptClientAccessor(method: tcgc.SdkClientAccessor<tcgc.SdkHttpOperation>, rustClient: rust.Client, subClient: rust.Client): void {
+  private adaptClientAccessor(client: tcgc.SdkClientType<tcgc.SdkHttpOperation>, method: tcgc.SdkClientAccessor<tcgc.SdkHttpOperation>, rustClient: rust.Client, subClient: rust.Client): void {
     const clientAccessor = new rust.ClientAccessor(`get_${snakeCaseName(subClient.name)}`, rustClient, subClient);
     clientAccessor.docs.summary = `Returns a new instance of ${subClient.name}.`;
     for (const param of method.parameters) {
+      // check if the client's initializer already has this parameter.
+      // if it does then omit it from the method sig as we'll populate
+      // the child client's value from the parent.
+      let existsOnParent = false;
+      for (const clientParam of client.clientInitialization.parameters) {
+        if (clientParam.name === param.name) {
+          existsOnParent = true;
+          break;
+        }
+      }
+      if (existsOnParent) {
+        continue;
+      }
       const adaptedParam = new rust.Parameter(snakeCaseName(param.name), this.getType(param.type));
       adaptedParam.docs = this.adaptDocs(param.summary, param.doc);
       clientAccessor.params.push(adaptedParam);
