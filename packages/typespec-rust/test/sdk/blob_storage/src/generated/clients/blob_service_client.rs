@@ -11,9 +11,9 @@ use crate::generated::{
         BlobServiceClientGetAccountInfoResult, BlobServiceClientGetPropertiesOptions,
         BlobServiceClientGetStatisticsOptions, BlobServiceClientGetUserDelegationKeyOptions,
         BlobServiceClientListContainersSegmentOptions, BlobServiceClientSetPropertiesOptions,
-        BlobServiceClientSetPropertiesResult, BlobServiceClientSubmitBatchOptions,
-        BlobServiceClientSubmitBatchResult, FilterBlobSegment, ListContainersSegmentResponse,
-        StorageServiceProperties, StorageServiceStats, UserDelegationKey,
+        BlobServiceClientSubmitBatchOptions, BlobServiceClientSubmitBatchResult, FilterBlobSegment,
+        ListContainersSegmentResponse, StorageServiceProperties, StorageServiceStats,
+        UserDelegationKey,
     },
 };
 use azure_core::{
@@ -332,7 +332,7 @@ impl BlobServiceClient {
     pub async fn set_properties(
         &self,
         options: Option<BlobServiceClientSetPropertiesOptions<'_>>,
-    ) -> Result<Response<BlobServiceClientSetPropertiesResult>> {
+    ) -> Result<Response<()>> {
         let options = options.unwrap_or_default();
         let ctx = Context::with_context(&options.method_options.context);
         let mut url = self.endpoint.clone();
@@ -386,9 +386,9 @@ impl BlobServiceClient {
                 .append_pair("timeout", &timeout.to_string());
         }
         let mut request = Request::new(url, Method::Post);
-        request.insert_header("accept", "multipart/mixed");
+        request.insert_header("accept", "application/octet-stream");
         request.insert_header("content-length", content_length.to_string());
-        request.insert_header("content-type", "multipart/mixed");
+        request.insert_header("content-type", "application/octet-stream");
         if let Some(client_request_id) = options.client_request_id {
             request.insert_header("x-ms-client-request-id", client_request_id);
         }
