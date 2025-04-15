@@ -185,9 +185,10 @@ export class Adapter {
    * converts a tcgc model to a Rust model
    * 
    * @param model the tcgc model to convert
+   * @param stack is a stack of model type names used to detect recursive type definitions
    * @returns a Rust model
    */
-  private getModel(model: tcgc.SdkModelType): rust.Model {
+  private getModel(model: tcgc.SdkModelType, stack?: Array<string>): rust.Model {
     if (model.name.length === 0) {
       throw new Error('unnamed model'); // TODO: this might no longer be an issue
     }
@@ -196,6 +197,13 @@ export class Adapter {
     if (rustModel) {
       return <rust.Model>rustModel;
     }
+
+    // no stack means this is the first model in
+    // the chain of potentially recursive calls
+    if (!stack) {
+      stack = new Array<string>();
+    }
+    stack.push(modelName);
 
     let modelFlags = rust.ModelFlags.Unspecified;
     if (<tcgc.UsageFlags>(model.usage & tcgc.UsageFlags.Input) === tcgc.UsageFlags.Input) {
@@ -246,9 +254,11 @@ export class Adapter {
           throw new Error(`model property kind ${property.kind} NYI`);
         }
       }
-      const structField = this.getModelField(property, rustModel.visibility);
+      const structField = this.getModelField(property, rustModel.visibility, stack);
       rustModel.fields.push(structField);
     }
+
+    stack.pop();
 
     return rustModel;
   }
@@ -258,16 +268,23 @@ export class Adapter {
    * 
    * @param property the tcgc model property to convert
    * @param modelVisibility the visibility of the model that contains the property
+   * @param stack is a stack of model type names used to detect recursive type definitions
    * @returns a Rust model field
    */
-  private getModelField(property: tcgc.SdkBodyModelPropertyType | tcgc.SdkPathParameter, modelVisibility: rust.Visibility): rust.ModelField {
-    let fieldType = this.getType(property.type);
+  private getModelField(property: tcgc.SdkBodyModelPropertyType | tcgc.SdkPathParameter, modelVisibility: rust.Visibility, stack: Array<string>): rust.ModelField {
+    let fieldType = this.getType(property.type, stack);
+
+    // if the field's type is a model and it's in the type stack then
+    // box it. this is to avoid infinitely recursive type definitions.
+    if (fieldType.kind === 'model' && stack.includes(fieldType.name)) {
+      fieldType = new rust.Box(fieldType);
+    }
 
     // for public models each field is always an Option<T>.
     // the only exception is for HashMap and Vec since an
     // empty collection conveys the same semantics.
     if ((modelVisibility === 'pub' || property.optional) && fieldType.kind !== 'hashmap' && fieldType.kind !== 'Vec') {
-      fieldType = new rust.Option(this.typeToWireType(fieldType));
+      fieldType = new rust.Option(fieldType.kind === 'box' ? fieldType : this.typeToWireType(fieldType));
     }
 
     const modelField = new rust.ModelField(naming.getEscapedReservedName(snakeCaseName(property.name), 'prop'), property.serializedName, modelVisibility, fieldType);
@@ -288,8 +305,14 @@ export class Adapter {
     return modelField;
   }
 
-  /** converts a tcgc type to a Rust type */
-  private getType(type: tcgc.SdkType): rust.Type {
+  /**
+   * converts a tcgc type to a Rust type
+   * 
+   * @param type the tcgc type to convert
+   * @param stack is a stack of model type names used to detect recursive type definitions
+   * @returns the adapted Rust type
+   */
+  private getType(type: tcgc.SdkType, stack?: Array<string>): rust.Type {
     const getDateTimeEncoding = (encoding: DateTimeKnownEncoding): rust.DateTimeEncoding => {
       switch (encoding) {
         case 'rfc3339':
@@ -357,7 +380,7 @@ export class Adapter {
         if (vectorType) {
           return vectorType;
         }
-        vectorType = new rust.Vector(this.typeToWireType(this.getType(type.valueType)));
+        vectorType = new rust.Vector(this.typeToWireType(this.getType(type.valueType, stack)));
         this.types.set(keyName, vectorType);
         return vectorType;
       }
@@ -383,7 +406,7 @@ export class Adapter {
         if (hashmapType) {
           return hashmapType;
         }
-        hashmapType = new rust.HashMap(this.typeToWireType(this.getType(type.valueType)));
+        hashmapType = new rust.HashMap(this.typeToWireType(this.getType(type.valueType, stack)));
         this.types.set(keyName, hashmapType);
         return hashmapType;
       }
@@ -417,7 +440,7 @@ export class Adapter {
       case 'enumvalue':
         return this.getEnumValue(type);
       case 'model':
-        return this.getModel(type);
+        return this.getModel(type, stack);
       case 'endpoint':
       case 'string':
       case 'url': {
@@ -435,7 +458,7 @@ export class Adapter {
       }
       case 'nullable':
         // TODO: workaround until https://github.com/Azure/typespec-rust/issues/42 is fixed
-        return this.getType(type.type);
+        return this.getType(type.type, stack);
       case 'offsetDateTime': {
         const keyName = `${type.kind}-${type.encode}`;
         let timeType = this.types.get(keyName);
@@ -1097,7 +1120,7 @@ export class Adapter {
       }
 
       const format = getBodyFormat();
-      const synthesizedModel = this.getModel(synthesizedType);
+      const synthesizedModel = this.getModel(synthesizedType, new Array<string>());
       if (!this.crate.models.includes(synthesizedModel)) {
         this.crate.models.push(synthesizedModel);
       }
