@@ -7,6 +7,7 @@
 * Model fields of type `HashMap` and `Vec` are now wrapped in an `Option<T>`.
   * The only exception is for the `Vec<T>` in paged responses.
 * Parameters emitted as `&str` but required ownership are now emitted as `String`.
+* Parameters of type `Vec<T>` that don't require ownership are now `&[T]`.
 
 ### Features Added
 
