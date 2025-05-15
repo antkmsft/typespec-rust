@@ -67,6 +67,9 @@ const httpSpecsGroup = {
 
 const azureHttpSpecsGroup = {
   //'spector_access': {input: 'azure/client-generator-core/access'},
+  'spector_apiverheader': {input: 'azure/client-generator-core/api-version/header/client.tsp'},
+  'spector_apiverpath': {input: 'azure/client-generator-core/api-version/path/client.tsp'},
+  'spector_apiverquery': {input: 'azure/client-generator-core/api-version/query/client.tsp'},
   'spector_clientinit': {input: 'azure/client-generator-core/client-initialization/client.tsp'},
   'spector_flattenproperty': {input: 'azure/client-generator-core/flatten-property'},
   'spector_coreusage': {input: 'azure/client-generator-core/usage'},
@@ -81,6 +84,7 @@ const azureHttpSpecsGroup = {
   'spector_azurepageable': {input: 'azure/payload/pageable'},
   'spector_azurebasic': {input: 'azure/example/basic'},
   'spector_armcommon': {input: 'azure/resource-manager/common-properties'},
+  'spector_armnonresource': {input: 'azure/resource-manager/non-resource'},
   //'spector_armresources': {input: 'azure/resource-manager/resources'},
   'spector_naming': {input: 'client/naming'},
   'spector_clientopgroup': {input: 'client/structure/client-operation-group/client.tsp'},
