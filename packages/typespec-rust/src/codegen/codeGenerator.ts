@@ -67,10 +67,13 @@ export class CodeGenerator {
     const clientsSubDir = 'clients';
     const modelsSubDir = 'models';
 
-    const addModelsFile = function(module: Module, crateOnly: boolean = false): void {
+    const addModelsFile = function(module: Module | undefined, visibility: 'internal' | 'pubUse' | 'pubCrate'): void {
+      if (!module) {
+        return;
+      }
       files.push({name: `${modelsSubDir}/${module.name}.rs`, content: module.content});
-      modelsModRS.push(`${crateOnly ? 'pub(crate) ' : ''}mod ${module.name}`);
-      if (!crateOnly) {
+      modelsModRS.push(`${visibility === 'pubCrate' ? 'pub(crate) ' : ''}mod ${module.name}`);
+      if (visibility === 'pubUse') {
         modelsModRS.push(`pub use ${module.name}::*`);
       }
     };
@@ -79,35 +82,19 @@ export class CodeGenerator {
     if (clientModules) {
       files.push(...clientModules.modules.map((module) => { return {name: `${clientsSubDir}/${module.name}.rs`, content: module.content}; }));
       files.push({name: `${clientsSubDir}/mod.rs`, content: emitClientsModRs(clientModules.modules.map((module) => module.name))});
-      addModelsFile(clientModules.options);
+      addModelsFile(clientModules.options, 'pubUse');
     }
 
-    const enums = emitEnums(this.crate, this.context);
-    if (enums) {
-      addModelsFile(enums);
-    }
+    addModelsFile(emitEnums(this.crate, this.context), 'pubUse');
 
     const models = emitModels(this.crate, this.context);
-    if (models.public) {
-      addModelsFile(models.public);
-    }
+    addModelsFile(models.public, 'pubUse');
+    addModelsFile(models.serde, 'pubCrate');
+    addModelsFile(models.impls, 'internal');
+    addModelsFile(models.internal, 'pubCrate');
+    addModelsFile(models.xmlHelpers, 'pubCrate');
 
-    if (models.serde) {
-      addModelsFile(models.serde, true);
-    }
-
-    if (models.internal) {
-      addModelsFile(models.internal, true);
-    }
-
-    if (models.xmlHelpers) {
-      addModelsFile(models.xmlHelpers, true);
-    }
-
-    const headerTraits = emitHeaderTraits(this.crate);
-    if (headerTraits) {
-      addModelsFile(headerTraits);
-    }
+    addModelsFile(emitHeaderTraits(this.crate), 'pubUse');
 
     if (modelsModRS.length > 0) {
       files.push({name: `${modelsSubDir}/mod.rs`, content: emitModelsModRs(modelsModRS)})
