@@ -29,9 +29,11 @@ export class Use {
   /**
    * adds the specified module and type if not already in the list
    * e.g. ('azure_core', 'Context') or ('super::models', 'FooType')
+   * NOTE: the leaf value MUST be a symbol within a module and not
+   * just a module.
    * 
    * @param module a module name
-   * @param type one or more types within the provided module
+   * @param type one or more functions/types within the provided module
    */
   add(module: string, ...types: Array<string>): void {
     if (types.length === 0) {

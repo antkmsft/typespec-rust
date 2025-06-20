@@ -7,9 +7,12 @@ use super::{
     models_serde, UnionFloatLiteralPropertyProperty, UnionIntLiteralPropertyProperty,
     UnionStringLiteralPropertyProperty,
 };
-use azure_core::{base64, fmt::SafeDebug};
+use azure_core::{
+    base64::{deserialize, serialize},
+    fmt::SafeDebug,
+    time::OffsetDateTime,
+};
 use serde::{Deserialize, Serialize};
-use time::OffsetDateTime;
 
 /// Model with boolean literal property
 #[derive(Clone, Default, Deserialize, SafeDebug, Serialize)]
@@ -30,8 +33,8 @@ pub struct BytesProperty {
     /// Property
     #[serde(
         default,
-        deserialize_with = "base64::deserialize",
-        serialize_with = "base64::serialize",
+        deserialize_with = "deserialize",
+        serialize_with = "serialize",
         skip_serializing_if = "Option::is_none"
     )]
     pub property: Option<Vec<u8>>,
@@ -64,7 +67,7 @@ pub struct DatetimeProperty {
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "azure_core::date::rfc3339::option"
+        with = "azure_core::time::rfc3339::option"
     )]
     pub property: Option<OffsetDateTime>,
 }

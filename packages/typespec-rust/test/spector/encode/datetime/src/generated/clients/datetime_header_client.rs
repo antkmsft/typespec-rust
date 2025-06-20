@@ -9,11 +9,10 @@ use crate::generated::models::{
     DatetimeHeaderClientUnixTimestampOptions,
 };
 use azure_core::{
-    date,
     http::{Context, Method, NoFormat, Pipeline, Request, Response, Url},
+    time::{to_rfc3339, to_rfc7231, OffsetDateTime},
     Result,
 };
-use time::OffsetDateTime;
 
 pub struct DatetimeHeaderClient {
     pub(crate) endpoint: Url,
@@ -40,7 +39,7 @@ impl DatetimeHeaderClient {
         let mut url = self.endpoint.clone();
         url = url.join("encode/datetime/header/default")?;
         let mut request = Request::new(url, Method::Get);
-        request.insert_header("value", date::to_rfc7231(&value));
+        request.insert_header("value", to_rfc7231(&value));
         self.pipeline.send(&ctx, &mut request).await.map(Into::into)
     }
 
@@ -58,7 +57,7 @@ impl DatetimeHeaderClient {
         let mut url = self.endpoint.clone();
         url = url.join("encode/datetime/header/rfc3339")?;
         let mut request = Request::new(url, Method::Get);
-        request.insert_header("value", date::to_rfc3339(&value));
+        request.insert_header("value", to_rfc3339(&value));
         self.pipeline.send(&ctx, &mut request).await.map(Into::into)
     }
 
@@ -76,7 +75,7 @@ impl DatetimeHeaderClient {
         let mut url = self.endpoint.clone();
         url = url.join("encode/datetime/header/rfc7231")?;
         let mut request = Request::new(url, Method::Get);
-        request.insert_header("value", date::to_rfc7231(&value));
+        request.insert_header("value", to_rfc7231(&value));
         self.pipeline.send(&ctx, &mut request).await.map(Into::into)
     }
 
