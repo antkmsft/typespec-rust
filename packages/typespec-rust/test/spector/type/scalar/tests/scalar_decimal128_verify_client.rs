@@ -6,44 +6,34 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 use spector_scalar::ScalarClient;
 
 #[tokio::test]
-async fn request_parameter() {
+async fn prepare_verify() {
     let client = ScalarClient::with_no_credential("http://localhost:3000", None).unwrap();
     let resp = client
-        .get_scalar_decimal128_type_client()
-        .request_parameter(Decimal::from_f32(0.33333).unwrap(), None)
-        .await
-        .unwrap();
-
-    assert_eq!(resp.status(), 204);
-}
-
-// This test is ignored because it uses #r syntax which technically allows user to pass the value, but this is
-// not the experience we want users to have. Once we enable better syntax, we whould update it and then enable.
-#[ignore]
-#[tokio::test]
-async fn request_body() {
-    let client = ScalarClient::with_no_credential("http://localhost:3000", None).unwrap();
-    let resp = client
-        .get_scalar_decimal128_type_client()
-        .request_body(r#"0.33333"#.try_into().unwrap(), None)
-        .await
-        .unwrap();
-
-    assert_eq!(resp.status(), 204);
-}
-
-#[tokio::test]
-async fn response_body() {
-    let client = ScalarClient::with_no_credential("http://localhost:3000", None).unwrap();
-    let resp = client
-        .get_scalar_decimal128_type_client()
-        .response_body(None)
+        .get_scalar_decimal128_verify_client()
+        .prepare_verify(None)
         .await
         .unwrap();
 
     assert_eq!(resp.status(), 200);
-    assert_eq!(
-        resp.into_body().await.unwrap(),
-        Decimal::from_f32(0.33333).unwrap()
-    );
+
+    let vec = resp.into_body().await.unwrap();
+    assert_eq!(vec.len(), 3);
+    assert_eq!(vec[0], Decimal::from_f32(0.1).unwrap());
+    assert_eq!(vec[1], Decimal::from_f32(0.1).unwrap());
+    assert_eq!(vec[2], Decimal::from_f32(0.1).unwrap());
+}
+
+// This test is ignored because it uses #r syntax which technically allows user to pass the value, but this is
+// not the experience we want users to have. Once we enable better syntax, we whould update it and then enable.
+#[tokio::test]
+#[ignore]
+async fn verify() {
+    let client = ScalarClient::with_no_credential("http://localhost:3000", None).unwrap();
+    let resp = client
+        .get_scalar_decimal128_verify_client()
+        .verify(r#"0.3"#.try_into().unwrap(), None)
+        .await
+        .unwrap();
+
+    assert_eq!(resp.status(), 204);
 }
