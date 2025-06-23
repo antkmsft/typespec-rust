@@ -390,19 +390,6 @@ export function capitalize(str: string): string {
 }
 
 /**
- * if type is an Option<T>, returns the T, else returns type
- * 
- * @param type is the type to unwrap
- * @returns the wrapped type or the original type if it wasn't wrapped
- */
-export function unwrapOption(type: rust.Type): rust.Type {
-  if (type.kind === 'option') {
-    return type.type;
-  }
-  return type;
-}
-
-/**
  * recursively unwraps a type. if type is an Option<Vec<T>>, returns the T
  * 
  * @param type is the type to unwrap
