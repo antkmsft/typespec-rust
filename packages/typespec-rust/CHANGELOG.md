@@ -1,6 +1,12 @@
 # Release History
 
-## 0.17.1 (unreleased)
+## 0.18.0 (unreleased)
+
+### Breaking Changes
+
+**NOTE: this version is incompatible with earlier versions of `azure_core`**
+
+* Renamed `PagerResult::More { next, .. }` to `PagerResult::More { continuation, .. }`.
 
 ### Other Changes
 
