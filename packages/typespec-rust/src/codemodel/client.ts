@@ -105,7 +105,7 @@ export interface SupplementalEndpoint {
 export type HTTPMethod = 'delete' | 'get' | 'head' | 'patch' | 'post' | 'put';
 
 /** Method defines the possible method types */
-export type MethodType = AsyncMethod | ClientAccessor | PageableMethod;
+export type MethodType = AsyncMethod | ClientAccessor | PageableMethod | LroMethod;
 
 /** AsyncMethod is an async Rust method */
 export interface AsyncMethod extends HTTPMethodBase {
@@ -142,6 +142,17 @@ export interface PageableMethod extends HTTPMethodBase {
    * but doesn't (yet) support fetching subsequent pages.
    */
   strategy?: PageableStrategyKind;
+}
+
+/** LroMethod is a method that returns a long-running operation. */
+export interface LroMethod extends HTTPMethodBase {
+  kind: 'lro';
+
+  /** the params passed to the method (excluding self). can be empty */
+  params: Array<MethodParameter>;
+
+  /** the lro result */
+  returns: types.Result<types.Poller>;
 }
 
 /** PageableStrategyContinuationToken indicates a pageable method uses the continuation token strategy */
@@ -663,6 +674,15 @@ export class PageableMethod extends HTTPMethodBase implements PageableMethod {
   constructor(name: string, languageIndependentName: string, client: Client, visibility: types.Visibility, options: MethodOptions, httpMethod: HTTPMethod, httpPath: string) {
     super(name, languageIndependentName, httpMethod, httpPath, visibility, client.name, new method.Self(false, true));
     this.kind = 'pageable';
+    this.params = new Array<MethodParameter>();
+    this.options = options;
+  }
+}
+
+export class LroMethod extends HTTPMethodBase implements LroMethod {
+  constructor(name: string, languageIndependentName: string, client: Client, visibility: types.Visibility, options: MethodOptions, httpMethod: HTTPMethod, httpPath: string) {
+    super(name, languageIndependentName, httpMethod, httpPath, visibility, client.name, new method.Self(false, true));
+    this.kind = 'lro';
     this.params = new Array<MethodParameter>();
     this.options = options;
   }

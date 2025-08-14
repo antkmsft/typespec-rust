@@ -217,6 +217,12 @@ export function emitClients(crate: rust.Crate): ClientModules | undefined {
             return getPageableMethodBody(indentation, use, client, method);
           };
           break;
+        case 'lro':
+          isPublicApi = true;
+          methodBody = (indentation: helpers.indentation): string => {
+            return getLroMethodBody(indentation, use, client, method);
+          };
+          break;
         case 'clientaccessor':
           isSubclientNew = true;
           methodBody = (indentation: helpers.indentation): string => {
@@ -318,7 +324,7 @@ function getMethodOptions(crate: rust.Crate): helpers.Module {
       }
       body += '}\n\n'; // end options
 
-      if (method.kind === 'pageable') {
+      if (method.kind === 'pageable' || method.kind === 'lro') {
         body += `impl ${helpers.getTypeDeclaration(method.options.type, true)} {\n`;
         body += `${indent.get()}pub fn into_owned(self) -> ${method.options.type.name}<'static> {\n`;
         body += `${indent.push().get()}${method.options.type.name} {\n`;
@@ -584,7 +590,7 @@ function getClientAccessorMethodBody(indent: helpers.indentation, client: rust.C
   return body;
 }
 
-type ClientMethod = rust.AsyncMethod | rust.PageableMethod;
+type ClientMethod = rust.AsyncMethod | rust.PageableMethod | rust.LroMethod;
 type HeaderParamType = rust.HeaderCollectionParameter | rust.HeaderHashMapParameter | rust.HeaderScalarParameter;
 type PathParamType = rust.PathCollectionParameter | rust.PathHashMapParameter | rust.PathScalarParameter;
 type QueryParamType = rust.QueryCollectionParameter | rust.QueryHashMapParameter | rust.QueryScalarParameter;
@@ -689,7 +695,7 @@ function getMethodParamGroup(method: ClientMethod): MethodParamGroups {
  * @returns 
  */
 function getParamValueHelper(indent: helpers.indentation, param: rust.MethodParameter, inClosure: boolean, setter: () => string): string {
-  if (param.optional) {
+  if (param.optional && param.type.kind !== 'literal') {
     // optional params are in the unwrapped options local var
     const op = indent.get() + helpers.buildIfBlock(indent, {
       condition: `let Some(${param.name}) = ${inClosure ? '&' : ''}options.${param.name}`,
@@ -889,28 +895,20 @@ function constructUrl(indent: helpers.indentation, use: Use, method: ClientMetho
 }
 
 /**
- * emits the code for building the HTTP request.
- * assumes that there's a local var 'url' which is the Url.
- * creates a mutable local 'request' which is the Request instance.
- * 
+ * emits the code for setting HTTP headers in a request.
+ *
  * @param indent the indentation helper currently in scope
  * @param use the use statement builder currently in scope
  * @param method the method for which we're building the body
  * @param paramGroups the param groups for the provided method
  * @param inClosure indicates if the request is being constructed within a closure (e.g. pageable methods)
- * @returns the request construction code
+ * @returns the code which sets HTTP headers for the request
  */
-function constructRequest(indent: helpers.indentation, use: Use, method: ClientMethod, paramGroups: MethodParamGroups, inClosure: boolean): string {
-  let body = `${indent.get()}let mut request = Request::new(url, Method::${codegen.capitalize(method.httpMethod)});\n`;
-  let optionalContentTypeParam: rust.HeaderScalarParameter | undefined;
+function applyHeaderParams(indent: helpers.indentation, use: Use, method: ClientMethod, paramGroups: MethodParamGroups, inClosure: boolean): string {
+
+  let body = '';
 
   for (const headerParam of paramGroups.header) {
-    // if the content-type header is optional, we need to emit it inside the "if let Some(body)" clause below.
-    if (headerParam.kind === 'headerScalar' && headerParam.optional && headerParam.header.toLowerCase() === 'content-type') {
-      optionalContentTypeParam = headerParam;
-      continue;
-    }
-
     if (method.kind === 'pageable' && method.strategy?.kind === 'continuationToken' && method.strategy?.requestToken.kind === 'headerScalar' && method.strategy?.requestToken === headerParam) {
       // we have some special handling for the header continuation token.
       // if we have a token value, i.e. from the next page, then use that value.
@@ -934,6 +932,36 @@ function constructRequest(indent: helpers.indentation, use: Use, method: ClientM
       const borrow = nonCopyableType(headerParam.type) && (headerParam.location === 'client' || (inClosure && !headerParam.optional)) ? '&' : '';
       return `${indent.get()}request.insert_header("${headerParam.header.toLowerCase()}", ${borrow}${getHeaderPathQueryParamValue(use, headerParam, !inClosure)});\n`;
     });
+  }
+
+  return body;
+}
+
+/**
+ * emits the code for building the HTTP request.
+ * assumes that there's a local var 'url' which is the Url.
+ * creates a mutable local 'request' which is the Request instance.
+ * 
+ * @param indent the indentation helper currently in scope
+ * @param use the use statement builder currently in scope
+ * @param method the method for which we're building the body
+ * @param paramGroups the param groups for the provided method
+ * @param inClosure indicates if the request is being constructed within a closure (e.g. pageable methods)
+ * @param cloneUrl indicates if url should be cloned when it is passed to initialize request
+ * @param forceMut indicates whether request should get declared as 'mut' regardless of whether there are any headers to set
+ * @returns the request construction code
+ */
+function constructRequest(indent: helpers.indentation, use: Use, method: ClientMethod, paramGroups: MethodParamGroups, inClosure: boolean, cloneUrl: boolean = false, forceMut: boolean = true): string {
+  let body = `${indent.get()}let ${(forceMut || paramGroups.header.length > 0) ? 'mut ' : ''}request = Request::new(url${cloneUrl ? '.clone()' : ''}, Method::${codegen.capitalize(method.httpMethod)});\n`;
+
+  body += applyHeaderParams(indent, use, method, paramGroups, inClosure);
+
+  let optionalContentTypeParam: rust.HeaderScalarParameter | undefined;
+  for (const headerParam of paramGroups.header) {
+    // if the content-type header is optional, we need to emit it inside the "if let Some(body)" clause below.
+    if (headerParam.kind === 'headerScalar' && headerParam.optional && headerParam.header.toLowerCase() === 'content-type') {
+      optionalContentTypeParam = headerParam;
+    }
   }
 
   const bodyParam = paramGroups.body;
@@ -1272,6 +1300,103 @@ function getPageableMethodBody(indent: helpers.indentation, use: Use, client: ru
   body += ')\n'; // end Ok
   body += `${indent.pop().get()}}\n`; // end async move
   body += `${indent.pop().get()}}))`; // end Ok/Pager::from_callback
+
+  return body;
+}
+
+/**
+ * constructs the body for an LRO client method
+ *
+ * @param indent the indentation helper currently in scope
+ * @param use the use statement builder currently in scope
+ * @param client the client to which the method belongs
+ * @param method the method for the body to build
+ * @returns the contents of the method body
+ */
+function getLroMethodBody(indent: helpers.indentation, use: Use, client: rust.Client, method: rust.LroMethod): string {
+  const bodyFormat = helpers.convertResponseFormat(method.returns.type.type.format);
+
+  use.add('azure_core::http', 'Method', 'RawResponse', 'Request', 'Url');
+  use.add('azure_core::http::poller', 'get_retry_after', 'PollerResult', 'PollerState', 'PollerStatus', 'StatusMonitor as _');
+  use.addForType(method.returns.type);
+  use.addForType(helpers.unwrapType(method.returns.type));
+
+  const paramGroups = getMethodParamGroup(method);
+  const urlVar = 'url';
+
+  let body = 'let options = options.unwrap_or_default().into_owned();\n';
+  body += `${indent.get()}let pipeline = self.pipeline.clone();\n`;
+  body += `${indent.get()}let ${urlVarNeedsMut(paramGroups, method)}${urlVar} = self.${getEndpointFieldName(client)}.clone();\n`;
+  body += `${constructUrl(indent, use, method, paramGroups, urlVar)}\n\n`;
+  if (paramGroups.apiVersion) {
+    body += `${indent.get()}let ${paramGroups.apiVersion.name} = ${getHeaderPathQueryParamValue(use, paramGroups.apiVersion, true)}.clone();\n\n`;
+  }
+
+  body += `${indent.get()}Ok(${method.returns.type.name}::from_callback(\n`
+  body += `${indent.push().get()}move |next_link: PollerState<Url>| {\n`;
+  body += `${indent.push().get()}let (mut request, next_link) = ${helpers.buildMatch(indent, 'next_link', [{
+    pattern: `PollerState::More(next_link)`,
+    body: (indent) => {
+      let body = '';
+      if (paramGroups.apiVersion) {
+        body += `${indent.get()}let qp = next_link.query_pairs().filter(|(name, _)| name.ne("api-version"));\n`;
+      }
+
+      body += `${indent.get()}let mut next_link = next_link.clone();\n`;
+
+      if (paramGroups.apiVersion) {
+        body += `${indent.get()}next_link.query_pairs_mut().clear().extend_pairs(qp).append_pair("api-version", &${paramGroups.apiVersion.name});\n\n`;
+      }
+      body += `${indent.get()}let ${paramGroups.header.length > 0 ? 'mut ' : ''}request = Request::new(next_link.clone(), Method::Get);`;
+      body += `\n${applyHeaderParams(indent, use, method, paramGroups, true)}\n\n`
+      body += `${indent.get()}(request, next_link)\n`;
+
+      return body;
+    },
+  }, {
+    pattern: 'PollerState::Initial',
+    body: (indent) => {
+      let body = `${constructRequest(indent, use, method, paramGroups, true, true, false)}\n`;
+      body += `${indent.get()}(request, url.clone())\n`;
+
+      return body;
+    },
+  }])};\n\n`;
+  body += `${indent.get()}let ctx = options.method_options.context.clone();\n`
+  body += `${indent.get()}let pipeline = pipeline.clone();\n`
+  body += `${indent.get()}async move {\n`
+  body += `${indent.push().get()}let rsp: RawResponse = pipeline.send(&ctx, &mut request).await?;\n`
+  body += `${indent.get()}let (status, headers, body) = rsp.deconstruct();\n`
+  body += `${indent.get()}let retry_after = get_retry_after(&headers, &options.poller_options);\n`
+  body += `${indent.get()}let bytes = body.collect().await?;\n`
+
+  let deserialize = '';
+  if (bodyFormat === 'json') {
+    use.add('azure_core', 'json');
+    deserialize = 'json::from_json';
+  } else {
+    deserialize = 'xml::read_xml';
+  }
+  body += `${indent.get()}let res: ${helpers.getTypeDeclaration(helpers.unwrapType(method.returns.type))} = ${deserialize}(&bytes)?;\n`
+  body += `${indent.get()}let rsp = RawResponse::from_bytes(status, headers, bytes).into();\n`
+
+  body += `${indent.get()}Ok(${helpers.buildMatch(indent, 'res.status()', [{
+    pattern: `PollerStatus::InProgress`,
+    body: (indent) => {
+      return `${indent.get()}response: rsp, retry_after, next: next_link\n`;
+    },
+    returns: 'PollerResult::InProgress'
+  }, {
+    pattern: '_',
+    body: (indent) => {
+      return `${indent.get()}response: rsp`;
+    },
+    returns: 'PollerResult::Done'
+  }])})\n`;
+  body += `${indent.pop().get()}}\n`; // end async move
+  body += `${indent.pop().get()}},\n`; // end move
+  body += `${indent.get()}None,\n`;
+  body += `${indent.pop().get()}))`; // end Ok/Poller::from_callback
 
   return body;
 }

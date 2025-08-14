@@ -6,7 +6,7 @@
 use super::{ActionRequest, ChangeAllowanceRequest, Widget};
 use azure_core::{
     fmt::SafeDebug,
-    http::{ClientMethodOptions, RequestContent},
+    http::{poller::PollerOptions, ClientMethodOptions, RequestContent},
 };
 
 /// Options to be passed to [`OperationTemplatesCheckNameAvailabilityClient::check_global()`](crate::generated::clients::OperationTemplatesCheckNameAvailabilityClient::check_global())
@@ -23,6 +23,68 @@ pub struct OperationTemplatesCheckNameAvailabilityClientCheckLocalOptions<'a> {
     pub method_options: ClientMethodOptions<'a>,
 }
 
+/// Options to be passed to [`OperationTemplatesLroClient::create_or_replace()`](crate::generated::clients::OperationTemplatesLroClient::create_or_replace())
+#[derive(Clone, Default, SafeDebug)]
+pub struct OperationTemplatesLroClientCreateOrReplaceOptions<'a> {
+    /// Allows customization of the method call.
+    pub method_options: ClientMethodOptions<'a>,
+
+    /// Allows customization of the [`Poller`](azure_core::http::poller::Poller).
+    pub poller_options: PollerOptions,
+}
+
+impl OperationTemplatesLroClientCreateOrReplaceOptions<'_> {
+    pub fn into_owned(self) -> OperationTemplatesLroClientCreateOrReplaceOptions<'static> {
+        OperationTemplatesLroClientCreateOrReplaceOptions {
+            method_options: ClientMethodOptions {
+                context: self.method_options.context.into_owned(),
+            },
+            poller_options: self.poller_options,
+        }
+    }
+}
+
+/// Options to be passed to [`OperationTemplatesLroClient::delete()`](crate::generated::clients::OperationTemplatesLroClient::delete())
+#[derive(Clone, Default, SafeDebug)]
+pub struct OperationTemplatesLroClientDeleteOptions<'a> {
+    /// Allows customization of the method call.
+    pub method_options: ClientMethodOptions<'a>,
+
+    /// Allows customization of the [`Poller`](azure_core::http::poller::Poller).
+    pub poller_options: PollerOptions,
+}
+
+impl OperationTemplatesLroClientDeleteOptions<'_> {
+    pub fn into_owned(self) -> OperationTemplatesLroClientDeleteOptions<'static> {
+        OperationTemplatesLroClientDeleteOptions {
+            method_options: ClientMethodOptions {
+                context: self.method_options.context.into_owned(),
+            },
+            poller_options: self.poller_options,
+        }
+    }
+}
+
+/// Options to be passed to [`OperationTemplatesLroClient::export()`](crate::generated::clients::OperationTemplatesLroClient::export())
+#[derive(Clone, Default, SafeDebug)]
+pub struct OperationTemplatesLroClientExportOptions<'a> {
+    /// Allows customization of the method call.
+    pub method_options: ClientMethodOptions<'a>,
+
+    /// Allows customization of the [`Poller`](azure_core::http::poller::Poller).
+    pub poller_options: PollerOptions,
+}
+
+impl OperationTemplatesLroClientExportOptions<'_> {
+    pub fn into_owned(self) -> OperationTemplatesLroClientExportOptions<'static> {
+        OperationTemplatesLroClientExportOptions {
+            method_options: ClientMethodOptions {
+                context: self.method_options.context.into_owned(),
+            },
+            poller_options: self.poller_options,
+        }
+    }
+}
 /// Options to be passed to [`OperationTemplatesOperationsClient::list()`](crate::generated::clients::OperationTemplatesOperationsClient::list())
 #[derive(Clone, Default, SafeDebug)]
 pub struct OperationTemplatesOperationsClientListOptions<'a> {

@@ -15,6 +15,7 @@ use crate::generated::models::{
     AzureAppConfigurationClientCheckSnapshotResult,
     AzureAppConfigurationClientCheckSnapshotsOptions,
     AzureAppConfigurationClientCheckSnapshotsResult,
+    AzureAppConfigurationClientCreateSnapshotOptions,
     AzureAppConfigurationClientDeleteKeyValueOptions, AzureAppConfigurationClientDeleteLockOptions,
     AzureAppConfigurationClientGetKeyValueOptions,
     AzureAppConfigurationClientGetOperationDetailsOptions,
@@ -23,9 +24,9 @@ use crate::generated::models::{
     AzureAppConfigurationClientListRevisionsOptions,
     AzureAppConfigurationClientListSnapshotsOptions, AzureAppConfigurationClientPutKeyValueOptions,
     AzureAppConfigurationClientPutLockOptions, AzureAppConfigurationClientUpdateSnapshotOptions,
-    KeyListResult, KeyValue, KeyValueListResult, LabelListResult, OperationDetails,
-    PutKeyValueRequestContentType, Snapshot, SnapshotListResult, SnapshotUpdateParameters,
-    UpdateSnapshotRequestContentType,
+    CreateSnapshotRequestContentType, KeyListResult, KeyValue, KeyValueListResult, LabelListResult,
+    OperationDetails, PutKeyValueRequestContentType, Snapshot, SnapshotListResult,
+    SnapshotUpdateParameters, UpdateSnapshotRequestContentType,
 };
 use azure_core::{
     credentials::TokenCredential,
@@ -33,8 +34,9 @@ use azure_core::{
     fmt::SafeDebug,
     http::{
         policies::{BearerTokenCredentialPolicy, Policy},
+        poller::{get_retry_after, PollerResult, PollerState, PollerStatus, StatusMonitor as _},
         ClientOptions, Method, NoFormat, PageIterator, Pager, PagerResult, PagerState, Pipeline,
-        RawResponse, Request, RequestContent, Response, Url,
+        Poller, RawResponse, Request, RequestContent, Response, Url,
     },
     json, tracing, Error, Result,
 };
@@ -514,6 +516,95 @@ impl AzureAppConfigurationClient {
             return Err(Error::new(error_kind, http_error));
         }
         Ok(rsp.into())
+    }
+
+    /// Creates a key-value snapshot.
+    ///
+    /// Creates a key-value snapshot.
+    ///
+    /// # Arguments
+    ///
+    /// * `content_type` - Content-Type header
+    /// * `name` - The name of the key-value snapshot to create.
+    /// * `entity` - The key-value snapshot to create.
+    /// * `options` - Optional parameters for the request.
+    #[tracing::function("AzureAppConfiguration.createSnapshot")]
+    pub fn create_snapshot(
+        &self,
+        content_type: CreateSnapshotRequestContentType,
+        name: &str,
+        entity: RequestContent<Snapshot>,
+        accept: String,
+        options: Option<AzureAppConfigurationClientCreateSnapshotOptions<'_>>,
+    ) -> Result<Poller<Snapshot>> {
+        let options = options.unwrap_or_default().into_owned();
+        let pipeline = self.pipeline.clone();
+        let mut url = self.endpoint.clone();
+        let mut path = String::from("snapshots/{name}");
+        path = path.replace("{name}", name);
+        url = url.join(&path)?;
+        url.query_pairs_mut()
+            .append_pair("api-version", &self.api_version);
+
+        let api_version = self.api_version.clone();
+
+        Ok(Poller::from_callback(
+            move |next_link: PollerState<Url>| {
+                let (mut request, next_link) = match next_link {
+                    PollerState::More(next_link) => {
+                        let qp = next_link
+                            .query_pairs()
+                            .filter(|(name, _)| name.ne("api-version"));
+                        let mut next_link = next_link.clone();
+                        next_link
+                            .query_pairs_mut()
+                            .clear()
+                            .extend_pairs(qp)
+                            .append_pair("api-version", &api_version);
+
+                        let mut request = Request::new(next_link.clone(), Method::Get);
+                        request.insert_header("accept", &accept);
+                        request.insert_header("content-type", content_type.to_string());
+                        if let Some(sync_token) = &options.sync_token {
+                            request.insert_header("sync-token", sync_token);
+                        }
+
+                        (request, next_link)
+                    }
+                    PollerState::Initial => {
+                        let mut request = Request::new(url.clone(), Method::Put);
+                        request.insert_header("accept", &accept);
+                        request.insert_header("content-type", content_type.to_string());
+                        if let Some(sync_token) = &options.sync_token {
+                            request.insert_header("sync-token", sync_token);
+                        }
+                        request.set_body(entity.clone());
+
+                        (request, url.clone())
+                    }
+                };
+
+                let ctx = options.method_options.context.clone();
+                let pipeline = pipeline.clone();
+                async move {
+                    let rsp: RawResponse = pipeline.send(&ctx, &mut request).await?;
+                    let (status, headers, body) = rsp.deconstruct();
+                    let retry_after = get_retry_after(&headers, &options.poller_options);
+                    let bytes = body.collect().await?;
+                    let res: Snapshot = json::from_json(&bytes)?;
+                    let rsp = RawResponse::from_bytes(status, headers, bytes).into();
+                    Ok(match res.status() {
+                        PollerStatus::InProgress => PollerResult::InProgress {
+                            response: rsp,
+                            retry_after,
+                            next: next_link,
+                        },
+                        _ => PollerResult::Done { response: rsp },
+                    })
+                }
+            },
+            None,
+        ))
     }
 
     /// Deletes a key-value.

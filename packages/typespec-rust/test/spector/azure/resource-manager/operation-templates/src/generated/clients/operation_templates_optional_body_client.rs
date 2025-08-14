@@ -118,6 +118,7 @@ impl OperationTemplatesOptionalBodyClient {
             .append_pair("api-version", &self.api_version);
         let mut request = Request::new(url, Method::Patch);
         request.insert_header("accept", "application/json");
+        request.insert_header("content-type", "application/json");
         if let Some(properties) = options.properties {
             request.insert_header("content-type", "application/json");
             request.set_body(properties);
@@ -173,6 +174,7 @@ impl OperationTemplatesOptionalBodyClient {
             .append_pair("api-version", &self.api_version);
         let mut request = Request::new(url, Method::Post);
         request.insert_header("accept", "application/json");
+        request.insert_header("content-type", "application/json");
         if let Some(body) = options.body {
             request.insert_header("content-type", "application/json");
             request.set_body(body);
@@ -209,6 +211,7 @@ impl OperationTemplatesOptionalBodyClient {
             .append_pair("api-version", &self.api_version);
         let mut request = Request::new(url, Method::Post);
         request.insert_header("accept", "application/json");
+        request.insert_header("content-type", "application/json");
         if let Some(body) = options.body {
             request.insert_header("content-type", "application/json");
             request.set_body(body);

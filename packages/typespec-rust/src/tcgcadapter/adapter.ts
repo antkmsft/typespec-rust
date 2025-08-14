@@ -939,13 +939,13 @@ export class Adapter {
     }
 
     for (const method of client.methods) {
-      if (method.kind === 'lro' || method.kind === 'lropaging') {
-        // skip LROs for now so that codegen is unblocked
+      if (method.kind === 'lropaging') {
+        // skip Paging LROs for now so that codegen is unblocked
         // TODO: https://github.com/Azure/typespec-rust/issues/188
         this.ctx.program.reportDiagnostic({
-          code: 'LroNotSupported',
+          code: 'LroPagingNotSupported',
           severity: 'warning',
-          message: `skip emitting LRO ${method.name}`,
+          message: `skip emitting Paging LRO ${method.name}`,
           target: method.__raw?.node ?? NoTarget,
         });
         continue;
@@ -1102,6 +1102,13 @@ export class Adapter {
     methodOptionsField.docs.summary = 'Allows customization of the method call.';
     methodOptionsStruct.fields.push(methodOptionsField);
 
+    if (method.kind === 'lro') {
+      const pollerOptions = new rust.ExternalType(this.crate, 'PollerOptions', 'azure_core::http::poller');
+      const pollerOptionsField = new rust.StructField('poller_options', 'pub', pollerOptions);
+      pollerOptionsField.docs.summary = 'Allows customization of the [`Poller`](azure_core::http::poller::Poller).';
+      methodOptionsStruct.fields.push(pollerOptionsField);
+    }
+
     const pub: rust.Visibility = method.access === 'public' ? 'pub' : 'pubCrate';
     const methodOptions = new rust.MethodOptions(methodOptionsStruct);
     const httpMethod = method.operation.verb;
@@ -1125,6 +1132,9 @@ export class Adapter {
         break;
       case 'paging':
         rustMethod = new rust.PageableMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, httpPath);
+        break;
+      case 'lro':
+        rustMethod = new rust.LroMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, httpPath);
         break;
       default:
         throw new AdapterError('UnsupportedTsp', `method kind ${method.kind} NYI`, method.__raw?.node);
@@ -1343,6 +1353,31 @@ export class Adapter {
       } else {
         rustMethod.returns = new rust.Result(this.crate, new rust.Pager(this.crate, new rust.Response(this.crate, synthesizedModel, responseFormat)));
       }
+    } else if (method.kind === 'lro') {
+      const format = responseFormat === 'NoFormat' ? 'JsonFormat' : responseFormat
+      const responseType = this.typeToWireType(this.getModel(method.lroMetadata.logicalResult));
+      if (responseType.kind !== 'model') {
+        throw new AdapterError('InternalError', `envelope result for ${method.name} is not a model`, method.__raw?.node);
+      }
+
+      const pushModels = (model: rust.Model, crate: rust.Crate): void => {
+        if (crate.models.some(m => m === model)) {
+          return;
+        }
+
+        crate.models.push(model);
+        for (const field of model.fields) {
+          let fieldType = field.type;
+          fieldType = fieldType.kind === 'option' ? fieldType.type : fieldType;
+          fieldType = fieldType.kind === 'Vec' ? fieldType.type : fieldType;
+          if (fieldType.kind === 'model') {
+            pushModels(fieldType, crate);
+          }
+        }
+      }
+      pushModels(responseType, this.crate);
+
+      rustMethod.returns = new rust.Result(this.crate, new rust.Poller(this.crate, new rust.Response(this.crate, responseType, format)));
     } else if (method.response.type && !(method.response.type.kind === 'bytes' && method.response.type.encode === 'bytes')) {
       const response = new rust.Response(this.crate, this.typeToWireType(this.getType(method.response.type)), responseFormat);
       rustMethod.returns = new rust.Result(this.crate, response);
@@ -1444,6 +1479,7 @@ export class Adapter {
     switch (method.returns.type.kind) {
       case 'pageIterator':
       case 'pager':
+      case 'poller':
         implFor = method.returns.type.type;
         break;
       case 'response':
@@ -1896,7 +1932,7 @@ function isRefSlice(type: rust.Type): type is rust.Ref<rust.Slice> {
 }
 
 /** method types that send/receive data */
-type MethodType = rust.AsyncMethod | rust.PageableMethod;
+type MethodType = rust.AsyncMethod | rust.PageableMethod | rust.LroMethod;
 
 /** supported kinds of tcgc scalars */
 type tcgcScalarKind = 'boolean' | 'float' | 'float32' | 'float64' | 'int16' | 'int32' | 'int64' | 'int8' | 'uint16' | 'uint32' | 'uint64' | 'uint8';

@@ -5,6 +5,7 @@
 
 use crate::generated::models::{
     ExtensionsResource, ExtensionsResourceListResult,
+    ResourcesExtensionsResourcesClientCreateOrUpdateOptions,
     ResourcesExtensionsResourcesClientDeleteOptions, ResourcesExtensionsResourcesClientGetOptions,
     ResourcesExtensionsResourcesClientListByScopeOptions,
     ResourcesExtensionsResourcesClientUpdateOptions,
@@ -12,7 +13,8 @@ use crate::generated::models::{
 use azure_core::{
     error::{ErrorKind, HttpError},
     http::{
-        Method, NoFormat, Pager, PagerResult, PagerState, Pipeline, RawResponse, Request,
+        poller::{get_retry_after, PollerResult, PollerState, PollerStatus, StatusMonitor as _},
+        Method, NoFormat, Pager, PagerResult, PagerState, Pipeline, Poller, RawResponse, Request,
         RequestContent, Response, Url,
     },
     json, tracing, Error, Result,
@@ -31,6 +33,87 @@ impl ResourcesExtensionsResourcesClient {
     /// Returns the Url associated with this client.
     pub fn endpoint(&self) -> &Url {
         &self.endpoint
+    }
+
+    /// Create a ExtensionsResource
+    ///
+    /// # Arguments
+    ///
+    /// * `resource_uri` - The fully qualified Azure Resource manager identifier of the resource.
+    /// * `extensions_resource_name` - The name of the ExtensionsResource
+    /// * `resource` - Resource create parameters.
+    /// * `options` - Optional parameters for the request.
+    #[tracing::function("Azure.ResourceManager.Resources.ExtensionsResources.createOrUpdate")]
+    pub fn create_or_update(
+        &self,
+        resource_uri: &str,
+        extensions_resource_name: &str,
+        resource: RequestContent<ExtensionsResource>,
+        options: Option<ResourcesExtensionsResourcesClientCreateOrUpdateOptions<'_>>,
+    ) -> Result<Poller<ExtensionsResource>> {
+        let options = options.unwrap_or_default().into_owned();
+        let pipeline = self.pipeline.clone();
+        let mut url = self.endpoint.clone();
+        let mut path = String::from("{resourceUri}/providers/Azure.ResourceManager.Resources/extensionsResources/{extensionsResourceName}");
+        path = path.replace("{extensionsResourceName}", extensions_resource_name);
+        path = path.replace("{resourceUri}", resource_uri);
+        url = url.join(&path)?;
+        url.query_pairs_mut()
+            .append_pair("api-version", &self.api_version);
+
+        let api_version = self.api_version.clone();
+
+        Ok(Poller::from_callback(
+            move |next_link: PollerState<Url>| {
+                let (mut request, next_link) = match next_link {
+                    PollerState::More(next_link) => {
+                        let qp = next_link
+                            .query_pairs()
+                            .filter(|(name, _)| name.ne("api-version"));
+                        let mut next_link = next_link.clone();
+                        next_link
+                            .query_pairs_mut()
+                            .clear()
+                            .extend_pairs(qp)
+                            .append_pair("api-version", &api_version);
+
+                        let mut request = Request::new(next_link.clone(), Method::Get);
+                        request.insert_header("accept", "application/json");
+                        request.insert_header("content-type", "application/json");
+
+                        (request, next_link)
+                    }
+                    PollerState::Initial => {
+                        let mut request = Request::new(url.clone(), Method::Put);
+                        request.insert_header("accept", "application/json");
+                        request.insert_header("content-type", "application/json");
+                        request.set_body(resource.clone());
+
+                        (request, url.clone())
+                    }
+                };
+
+                let ctx = options.method_options.context.clone();
+                let pipeline = pipeline.clone();
+                async move {
+                    let rsp: RawResponse = pipeline.send(&ctx, &mut request).await?;
+                    let (status, headers, body) = rsp.deconstruct();
+                    let retry_after = get_retry_after(&headers, &options.poller_options);
+                    let bytes = body.collect().await?;
+                    let res: ExtensionsResource = json::from_json(&bytes)?;
+                    let rsp = RawResponse::from_bytes(status, headers, bytes).into();
+                    Ok(match res.status() {
+                        PollerStatus::InProgress => PollerResult::InProgress {
+                            response: rsp,
+                            retry_after,
+                            next: next_link,
+                        },
+                        _ => PollerResult::Done { response: rsp },
+                    })
+                }
+            },
+            None,
+        ))
     }
 
     /// Delete a ExtensionsResource

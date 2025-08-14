@@ -9,7 +9,10 @@ use super::{
 };
 use async_trait::async_trait;
 use azure_core::{
-    http::{Page, RequestContent},
+    http::{
+        poller::{PollerStatus, StatusMonitor},
+        Page, RequestContent,
+    },
     json::to_json,
     Result,
 };
@@ -44,9 +47,26 @@ impl Page for SnapshotListResult {
     }
 }
 
+impl StatusMonitor for Snapshot {
+    type Output = Snapshot;
+    fn status(&self) -> PollerStatus {
+        match &self.status {
+            Some(v) => PollerStatus::from(v.as_ref()),
+            None => PollerStatus::InProgress,
+        }
+    }
+}
+
 impl TryFrom<KeyValue> for RequestContent<KeyValue> {
     type Error = azure_core::Error;
     fn try_from(value: KeyValue) -> Result<Self> {
+        RequestContent::try_from(to_json(&value)?)
+    }
+}
+
+impl TryFrom<Snapshot> for RequestContent<Snapshot> {
+    type Error = azure_core::Error;
+    fn try_from(value: Snapshot) -> Result<Self> {
         RequestContent::try_from(to_json(&value)?)
     }
 }
