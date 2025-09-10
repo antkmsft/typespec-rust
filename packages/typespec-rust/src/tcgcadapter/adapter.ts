@@ -782,7 +782,7 @@ export class Adapter {
   private recursiveAdaptClient(client: tcgc.SdkClientType<tcgc.SdkHttpOperation>, parent?: rust.Client): rust.Client {
     let clientName = client.name;
     // NOTE: if the client has the @clientName decorator applied then use that verbatim
-    if (parent && !client.decorators.find((decorator) => decorator.name === 'Azure.ClientGenerator.Core.@clientName')) {
+    if (parent && !hasClientNameDecorator(client.decorators)) {
       // for hierarchical clients, the child client names are built
       // from the parent client name. this is because tsp allows subclients
       // with the same name. consider the following example.
@@ -906,12 +906,13 @@ export class Adapter {
               if (i === 0) {
                 // the first template arg is always the endpoint parameter.
                 // note that the types of the param and the field are different.
-                // NOTE: we use param.name here instead of templateArg.name as
-                // the former has the fixed name "endpoint" which is what we want.
-                const adaptedParam = new rust.ClientEndpointParameter(param.name);
+                // we default to "endpoint" and will use the defined name IFF
+                // it has the @clientName decorator applied
+                const endpointName = hasClientNameDecorator(templateArg.decorators) ? snakeCaseName(templateArg.name) : 'endpoint';
+                const adaptedParam = new rust.ClientEndpointParameter(endpointName);
                 adaptedParam.docs = this.adaptDocs(param.summary, param.doc);
                 ctorParams.push(adaptedParam);
-                rustClient.fields.push(new rust.StructField(param.name, 'pubCrate', new rust.Url(this.crate)));
+                rustClient.fields.push(new rust.StructField(endpointName, 'pubCrate', new rust.Url(this.crate)));
 
                 // if the server's URL is *only* the endpoint parameter then we're done.
                 // this is the param.type.kind === 'endpoint' case.
@@ -2146,4 +2147,14 @@ function getXMLKind(decorators: Array<tcgc.DecoratorInfo>, field: rust.ModelFiel
   }
 
   return undefined;
+}
+
+/**
+ * returns true if decorators contains `@clientName`
+ * 
+ * @param decorators the array of decorators to inspect
+ * @returns true if `@clientName` is found in decorators
+ */
+function hasClientNameDecorator(decorators: Array<tcgc.DecoratorInfo>): boolean {
+  return decorators.find((decorator) => decorator.name === 'Azure.ClientGenerator.Core.@clientName') !== undefined;
 }

@@ -5,6 +5,7 @@
 ### Other Changes
 
 * Exit early when there are existing diagnostic errors.
+* For client constructors, the server URL parameter name will be honored IFF the `@clientName` decorator is applied.
 
 ## 0.21.0 (2025-09-03)
 
