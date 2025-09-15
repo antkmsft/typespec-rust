@@ -21,8 +21,8 @@ importers:
         specifier: ^4.3.2
         version: 4.3.2
       query-string:
-        specifier: 9.2.2
-        version: 9.2.2
+        specifier: 9.3.0
+        version: 9.3.0
       source-map-support:
         specifier: 0.5.21
         version: 0.5.21
@@ -2038,8 +2038,8 @@ packages:
     resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
     engines: {node: '>=0.6'}
 
-  query-string@9.2.2:
-    resolution: {integrity: sha512-pDSIZJ9sFuOp6VnD+5IkakSVf+rICAuuU88Hcsr6AKL0QtxSIfVuKiVP2oahFI7tk3CRSexwV+Ya6MOoTxzg9g==}
+  query-string@9.3.0:
+    resolution: {integrity: sha512-IQHOQ9aauHAApwAaUYifpEyLHv6fpVGVkMOnwPzcDScLjbLj8tLsILn6unSW79NafOw1llh8oK7Gd0VwmXBFmA==}
     engines: {node: '>=18'}
 
   queue-microtask@1.2.3:
@@ -4578,7 +4578,7 @@ snapshots:
     dependencies:
       side-channel: 1.1.0
 
-  query-string@9.2.2:
+  query-string@9.3.0:
     dependencies:
       decode-uri-component: 0.4.1
       filter-obj: 5.1.0
