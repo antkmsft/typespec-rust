@@ -53,7 +53,7 @@ export class AdapterError extends Error {
  * ExternalError is thrown when an external component reports a
  * diagnostic error that would prevent the emitter from proceeding.
  */
-export class ExternalError extends Error {}
+export class ExternalError extends Error { }
 
 /** Adapter converts the tcgc code model to a Rust Crate */
 export class Adapter {
@@ -1297,6 +1297,21 @@ export class Adapter {
       return this.adaptPayloadFormatType(defaultContentType);
     };
 
+    const getStatusCodes = function (httpOp: tcgc.SdkHttpOperation): Array<number> {
+      const statusCodes = new Array<number>();
+      for (const response of httpOp.responses) {
+        const statusCode = response.statusCodes;
+        if (isHttpStatusCodeRange(statusCode)) {
+          for (let code = statusCode.start; code <= statusCode.end; ++code) {
+            statusCodes.push(code);
+          }
+        } else {
+          statusCodes.push(statusCode);
+        }
+      }
+      return statusCodes;
+    };
+
     // add any response headers
     const responseHeaders = new Array<tcgc.SdkServiceResponseHeader>();
     for (const httpResp of method.operation.responses) {
@@ -1432,6 +1447,7 @@ export class Adapter {
       pushModels(responseType, this.crate);
 
       rustMethod.returns = new rust.Result(this.crate, new rust.Poller(this.crate, new rust.Response(this.crate, responseType, format)));
+
     } else if (method.response.type && !(method.response.type.kind === 'bytes' && method.response.type.encode === 'bytes')) {
       const response = new rust.Response(this.crate, this.typeToWireType(this.getType(method.response.type)), responseFormat);
       rustMethod.returns = new rust.Result(this.crate, response);
@@ -1448,6 +1464,17 @@ export class Adapter {
     } else {
       rustMethod.returns = new rust.Result(this.crate, new rust.Response(this.crate, this.getUnitType(), responseFormat));
     }
+
+    // Mark the set of success status codes expected from this method.
+    rustMethod.statusCodes = getStatusCodes(method.operation);
+
+    // For long running operations, we add 200 OK if not already present for the LRO polling and terminal states.
+    if (method.kind === 'lro') {
+      if (!rustMethod.statusCodes.includes(200)) {
+        rustMethod.statusCodes.push(200);
+      }
+    }
+    rustMethod.statusCodes.sort((a, b) => a - b);
 
     const responseHeadersMap = this.adaptResponseHeaders(responseHeaders);
     rustMethod.responseHeaders = this.adaptResponseHeadersTrait(rustClient, rustMethod, Array.from(responseHeadersMap.values()));
@@ -2137,4 +2164,9 @@ function getXMLKind(decorators: Array<tcgc.DecoratorInfo>, field: rust.ModelFiel
  */
 function hasClientNameDecorator(decorators: Array<tcgc.DecoratorInfo>): boolean {
   return decorators.find((decorator) => decorator.name === 'Azure.ClientGenerator.Core.@clientName') !== undefined;
+}
+
+
+function isHttpStatusCodeRange(statusCode: http.HttpStatusCodeRange | number): statusCode is http.HttpStatusCodeRange {
+  return (<http.HttpStatusCodeRange>statusCode).start !== undefined;
 }
