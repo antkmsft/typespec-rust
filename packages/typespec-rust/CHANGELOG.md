@@ -1,6 +1,13 @@
 # Release History
 
-## 0.24.2 (unreleased)
+## 0.25.0 (unreleased)
+
+### Breaking Changes
+
+**Note this version is incompatible with earlier versions of `azure_core`**
+
+* The `serde` helpers for base64 data wrapped in an `Option<T>` are now in `azure_core::base64::option`.
+* The core XML helper `read_xml` has been renamed to `from_xml`.
 
 ### Bugs Fixed
 
