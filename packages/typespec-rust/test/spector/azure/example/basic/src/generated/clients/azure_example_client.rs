@@ -11,7 +11,7 @@ use azure_core::{
     fmt::SafeDebug,
     http::{
         ClientOptions, Method, Pipeline, PipelineSendOptions, Request, RequestContent, Response,
-        Url,
+        Url, UrlExt,
     },
     tracing, Result,
 };
@@ -86,7 +86,7 @@ impl AzureExampleClient {
         let options = options.unwrap_or_default();
         let ctx = options.method_options.context.to_borrowed();
         let mut url = self.endpoint.clone();
-        url = url.join("azure/example/basic/basic")?;
+        url.append_path("/azure/example/basic/basic");
         url.query_pairs_mut()
             .append_pair("api-version", &self.api_version);
         url.query_pairs_mut()

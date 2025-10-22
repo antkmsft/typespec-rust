@@ -19,7 +19,7 @@ use azure_core::{
     error::CheckSuccessOptions,
     http::{
         pager::{PagerResult, PagerState},
-        Method, Pager, Pipeline, PipelineSendOptions, RawResponse, Request, Response, Url,
+        Method, Pager, Pipeline, PipelineSendOptions, RawResponse, Request, Response, Url, UrlExt,
     },
     json, tracing, Result,
 };
@@ -50,7 +50,7 @@ impl PageableServerDrivenPaginationContinuationTokenClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.endpoint.clone();
-        first_url = first_url.join("payload/pageable/server-driven-pagination/continuationtoken/request-header-nested-response-body")?;
+        first_url.append_path("/payload/pageable/server-driven-pagination/continuationtoken/request-header-nested-response-body");
         if let Some(bar) = options.bar {
             first_url.query_pairs_mut().append_pair("bar", &bar);
         }
@@ -116,7 +116,7 @@ impl PageableServerDrivenPaginationContinuationTokenClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.endpoint.clone();
-        first_url = first_url.join("payload/pageable/server-driven-pagination/continuationtoken/request-header-response-body")?;
+        first_url.append_path("/payload/pageable/server-driven-pagination/continuationtoken/request-header-response-body");
         if let Some(bar) = options.bar {
             first_url.query_pairs_mut().append_pair("bar", &bar);
         }
@@ -200,7 +200,7 @@ impl PageableServerDrivenPaginationContinuationTokenClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.endpoint.clone();
-        first_url = first_url.join("payload/pageable/server-driven-pagination/continuationtoken/request-header-response-header")?;
+        first_url.append_path("/payload/pageable/server-driven-pagination/continuationtoken/request-header-response-header");
         if let Some(bar) = options.bar {
             first_url.query_pairs_mut().append_pair("bar", &bar);
         }
@@ -259,7 +259,7 @@ impl PageableServerDrivenPaginationContinuationTokenClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.endpoint.clone();
-        first_url = first_url.join("payload/pageable/server-driven-pagination/continuationtoken/request-query-nested-response-body")?;
+        first_url.append_path("/payload/pageable/server-driven-pagination/continuationtoken/request-query-nested-response-body");
         if let Some(bar) = options.bar {
             first_url.query_pairs_mut().append_pair("bar", &bar);
         }
@@ -332,7 +332,7 @@ impl PageableServerDrivenPaginationContinuationTokenClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.endpoint.clone();
-        first_url = first_url.join("payload/pageable/server-driven-pagination/continuationtoken/request-query-response-body")?;
+        first_url.append_path("/payload/pageable/server-driven-pagination/continuationtoken/request-query-response-body");
         if let Some(bar) = options.bar {
             first_url.query_pairs_mut().append_pair("bar", &bar);
         }
@@ -423,7 +423,7 @@ impl PageableServerDrivenPaginationContinuationTokenClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.endpoint.clone();
-        first_url = first_url.join("payload/pageable/server-driven-pagination/continuationtoken/request-query-response-header")?;
+        first_url.append_path("/payload/pageable/server-driven-pagination/continuationtoken/request-query-response-header");
         if let Some(bar) = options.bar {
             first_url.query_pairs_mut().append_pair("bar", &bar);
         }

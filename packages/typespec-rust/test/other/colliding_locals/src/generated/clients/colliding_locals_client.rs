@@ -17,7 +17,7 @@ use azure_core::{
     http::{
         pager::{PagerResult, PagerState},
         ClientOptions, Method, NoFormat, Pager, Pipeline, PipelineSendOptions, RawResponse,
-        Request, Response, Url,
+        Request, Response, Url, UrlExt,
     },
     json, tracing, Result,
 };
@@ -99,10 +99,10 @@ impl CollidingLocalsClient {
         let options = options.unwrap_or_default();
         let ctx = options.method_options.context.to_borrowed();
         let mut url = self.bogus_url.clone();
-        let mut path = String::from("colliding/{request}/{coreReq}");
+        let mut path = String::from("/colliding/{request}/{coreReq}");
         path = path.replace("{coreReq}", core_req);
         path = path.replace("{request}", request);
-        url = url.join(&path)?;
+        url.append_path(&path);
         let mut core_req_0 = Request::new(url, Method::Get);
         let rsp = self
             .pipeline
@@ -160,12 +160,12 @@ impl CollidingLocalsClient {
         let options = options.unwrap_or_default();
         let ctx = options.method_options.context.to_borrowed();
         let mut url_var = self.bogus_url.clone();
-        let mut path_var = String::from("colliding/{request}/{coreReq}/{path}/{url}");
+        let mut path_var = String::from("/colliding/{request}/{coreReq}/{path}/{url}");
         path_var = path_var.replace("{coreReq}", core_req);
         path_var = path_var.replace("{path}", path);
         path_var = path_var.replace("{request}", request);
         path_var = path_var.replace("{url}", url);
-        url_var = url_var.join(&path_var)?;
+        url_var.append_path(&path_var);
         let mut core_req_0 = Request::new(url_var, Method::Get);
         let rsp = self
             .pipeline
@@ -209,10 +209,10 @@ impl CollidingLocalsClient {
         let options = options.unwrap_or_default();
         let ctx = options.method_options.context.to_borrowed();
         let mut url_var = self.bogus_url.clone();
-        let mut path_var = String::from("colliding/{path}/{url}");
+        let mut path_var = String::from("/colliding/{path}/{url}");
         path_var = path_var.replace("{path}", path);
         path_var = path_var.replace("{url}", url);
-        url_var = url_var.join(&path_var)?;
+        url_var.append_path(&path_var);
         let mut request = Request::new(url_var, Method::Get);
         let rsp = self
             .pipeline
@@ -249,9 +249,9 @@ impl CollidingLocalsClient {
         let options = options.unwrap_or_default();
         let ctx = options.method_options.context.to_borrowed();
         let mut url = self.bogus_url.clone();
-        let mut path = String::from("colliding/{request}");
+        let mut path = String::from("/colliding/{request}");
         path = path.replace("{request}", request);
-        url = url.join(&path)?;
+        url.append_path(&path);
         let mut core_req = Request::new(url, Method::Get);
         let rsp = self
             .pipeline
@@ -309,12 +309,12 @@ impl CollidingLocalsClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut url_var = self.bogus_url.clone();
-        let mut path_var = String::from("list/page/colliding/{request}/{coreReq}/{path}/{url}");
+        let mut path_var = String::from("/list/page/colliding/{request}/{coreReq}/{path}/{url}");
         path_var = path_var.replace("{coreReq}", core_req);
         path_var = path_var.replace("{path}", path);
         path_var = path_var.replace("{request}", request);
         path_var = path_var.replace("{url}", url);
-        url_var = url_var.join(&path_var)?;
+        url_var.append_path(&path_var);
         Ok(Pager::from_callback(move |_: PagerState<Url>| {
             let mut core_req_0 = Request::new(url_var.clone(), Method::Get);
             core_req_0.insert_header("accept", "application/json");
@@ -380,12 +380,12 @@ impl CollidingLocalsClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut first_url = self.bogus_url.clone();
-        let mut path_var = String::from("list/pages/colliding/{request}/{coreReq}/{path}/{url}");
+        let mut path_var = String::from("/list/pages/colliding/{request}/{coreReq}/{path}/{url}");
         path_var = path_var.replace("{coreReq}", core_req);
         path_var = path_var.replace("{path}", path);
         path_var = path_var.replace("{request}", request);
         path_var = path_var.replace("{url}", url);
-        first_url = first_url.join(&path_var)?;
+        first_url.append_path(&path_var);
         Ok(Pager::from_callback(move |next_link: PagerState<Url>| {
             let url = match next_link {
                 PagerState::More(next_link) => next_link,

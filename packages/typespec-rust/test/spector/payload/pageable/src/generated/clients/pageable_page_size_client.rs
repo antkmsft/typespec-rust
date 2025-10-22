@@ -12,7 +12,7 @@ use azure_core::{
     error::CheckSuccessOptions,
     http::{
         pager::{PagerResult, PagerState},
-        Method, Pager, Pipeline, PipelineSendOptions, Request, Url,
+        Method, Pager, Pipeline, PipelineSendOptions, Request, Url, UrlExt,
     },
     tracing, Result,
 };
@@ -41,7 +41,7 @@ impl PageablePageSizeClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut url = self.endpoint.clone();
-        url = url.join("payload/pageable/pagesize/list")?;
+        url.append_path("/payload/pageable/pagesize/list");
         if let Some(page_size) = options.page_size {
             url.query_pairs_mut()
                 .append_pair("pageSize", &page_size.to_string());
@@ -83,7 +83,7 @@ impl PageablePageSizeClient {
         let options = options.unwrap_or_default().into_owned();
         let pipeline = self.pipeline.clone();
         let mut url = self.endpoint.clone();
-        url = url.join("payload/pageable/pagesize/without-continuation")?;
+        url.append_path("/payload/pageable/pagesize/without-continuation");
         Ok(Pager::from_callback(move |_: PagerState<Url>| {
             let mut request = Request::new(url.clone(), Method::Get);
             request.insert_header("accept", "application/json");

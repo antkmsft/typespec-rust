@@ -1031,18 +1031,8 @@ export class Adapter {
                 // there's either a suffix on the endpoint param, more template arguments, or both.
                 // either way we need to create supplemental info on the constructable.
                 // NOTE: we remove the {endpoint} segment and trailing forward slash as we use
-                // Url::join to concatenate the two and not string replacement.
-                let serverUrl = endpointType.serverUrl.replace(`{${templateArg.serializedName}}/`, '');
-
-                // NOTE: the behavior of Url::join requires that the path ends with a forward slash.
-                // if there are any query params, splice it in as required else just append it.
-                if (serverUrl.includes('?')) {
-                  if (serverUrl[serverUrl.indexOf('?') - 1] !== '/') {
-                    serverUrl = serverUrl.replace('?', '/?');
-                  }
-                } else if (serverUrl[serverUrl.length - 1] !== '/') {
-                  serverUrl += '/';
-                }
+                // UrlExt::append_path() to concatenate the two and not string replacement.
+                const serverUrl = endpointType.serverUrl.replace(`{${templateArg.serializedName}}/`, '');
 
                 rustClient.constructable.endpoint = new rust.SupplementalEndpoint(serverUrl);
                 continue;
@@ -1293,28 +1283,16 @@ export class Adapter {
     const methodOptions = new rust.MethodOptions(methodOptionsStruct);
     const httpMethod = method.operation.verb;
 
-    // if path is more than just "/" strip off any leading forward slash.
-    // this is because Url::join will treat the path as absolute, overwriting
-    // any existing path on the endpoint.
-    // e.g. if endpoint is https://contoso.com/foo/bar and httpPath is /some/sub/path
-    // then calling Url::join will provide result https://contoso.com/some/sub/path
-    // which is not what we want.
-    // the only exception is if this is the root before the query string
-    let httpPath = method.operation.path;
-    if (httpPath.length > 1 && httpPath[0] === '/' && !httpPath.startsWith('/?')) {
-      httpPath = httpPath.slice(1);
-    }
-
     let rustMethod: MethodType;
     switch (method.kind) {
       case 'basic':
-        rustMethod = new rust.AsyncMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, httpPath);
+        rustMethod = new rust.AsyncMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, method.operation.path);
         break;
       case 'paging':
-        rustMethod = new rust.PageableMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, httpPath);
+        rustMethod = new rust.PageableMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, method.operation.path);
         break;
       case 'lro':
-        rustMethod = new rust.LroMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, httpPath);
+        rustMethod = new rust.LroMethod(methodName, languageIndependentName, rustClient, pub, methodOptions, httpMethod, method.operation.path);
         break;
       default:
         throw new AdapterError('UnsupportedTsp', `method kind ${method.kind} NYI`, method.__raw?.node);
