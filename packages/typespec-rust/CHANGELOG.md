@@ -1,6 +1,6 @@
 # Release History
 
-## 0.26.0 (unreleased)
+## 0.26.0 (2025-11-04)
 
 ### Breaking Changes
 
@@ -8,6 +8,10 @@
 
 * An explicit parameter for header `x-ms-client-request-id` is no longer emitted.
 * Updated renamed bearer token authorization policy.
+
+### Features Added
+
+* Added support for decorator `@deserializeEmptyStringAsNull`.
 
 ### Bugs Fixed
 
