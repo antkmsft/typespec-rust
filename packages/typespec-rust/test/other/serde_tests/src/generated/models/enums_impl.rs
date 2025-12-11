@@ -9,6 +9,8 @@ use std::{
     fmt::{Display, Formatter},
 };
 
+#[allow(unknown_lints)]
+#[allow(clippy::infallible_try_from)]
 impl TryFrom<i32> for ExtensibleValues {
     type Error = Infallible;
     fn try_from(value: i32) -> Result<Self, Self::Error> {
