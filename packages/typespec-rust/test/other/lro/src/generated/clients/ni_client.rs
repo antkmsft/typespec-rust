@@ -122,9 +122,9 @@ impl NIClient {
         let mut query_builder = url.query_builder();
         query_builder.set_pair("api-version", api_version);
         query_builder.build();
-        Ok(Poller::from_callback(
-            move |next_link: PollerState<Url>, poller_options| {
-                let (mut request, next_link) = match next_link {
+        Ok(Poller::new(
+            move |poller_state: PollerState<Url>, poller_options| {
+                let (mut request, next_link) = match poller_state {
                     PollerState::More(next_link) => {
                         let request = Request::new(next_link.clone(), Method::Get);
                         (request, next_link)
@@ -136,7 +136,7 @@ impl NIClient {
                 };
                 let ctx = poller_options.context.clone();
                 let pipeline = pipeline.clone();
-                async move {
+                Box::pin(async move {
                     let rsp = pipeline
                         .send(
                             &ctx,
@@ -175,7 +175,7 @@ impl NIClient {
                         PollerStatus::InProgress => PollerResult::InProgress {
                             response: rsp,
                             retry_after,
-                            next: next_link,
+                            continuation_token: next_link,
                         },
                         PollerStatus::Succeeded => PollerResult::Succeeded {
                             response: rsp,
@@ -191,7 +191,7 @@ impl NIClient {
                         },
                         _ => PollerResult::Done { response: rsp },
                     })
-                }
+                })
             },
             Some(options.method_options),
         ))
@@ -239,9 +239,9 @@ impl NIClient {
         let mut query_builder = url.query_builder();
         query_builder.set_pair("api-version", api_version);
         query_builder.build();
-        Ok(Poller::from_callback(
-            move |next_link: PollerState<Url>, poller_options| {
-                let (mut request, next_link) = match next_link {
+        Ok(Poller::new(
+            move |poller_state: PollerState<Url>, poller_options| {
+                let (mut request, next_link) = match poller_state {
                     PollerState::More(next_link) => {
                         let mut request = Request::new(next_link.clone(), Method::Get);
                         request.insert_header("content-type", "application/json");
@@ -262,7 +262,7 @@ impl NIClient {
                 };
                 let ctx = poller_options.context.clone();
                 let pipeline = pipeline.clone();
-                async move {
+                Box::pin(async move {
                     let rsp = pipeline
                         .send(
                             &ctx,
@@ -301,7 +301,7 @@ impl NIClient {
                         PollerStatus::InProgress => PollerResult::InProgress {
                             response: rsp,
                             retry_after,
-                            next: next_link,
+                            continuation_token: next_link,
                         },
                         PollerStatus::Succeeded => PollerResult::Succeeded {
                             response: rsp,
@@ -317,7 +317,7 @@ impl NIClient {
                         },
                         _ => PollerResult::Done { response: rsp },
                     })
-                }
+                })
             },
             Some(options.method_options),
         ))

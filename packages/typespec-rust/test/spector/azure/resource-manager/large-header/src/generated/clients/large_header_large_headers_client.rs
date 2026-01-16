@@ -96,9 +96,9 @@ impl LargeHeaderLargeHeadersClient {
                 self.next_link.as_ref()
             }
         }
-        Ok(Poller::from_callback(
-            move |state: PollerState<Progress>, poller_options| {
-                let (mut request, progress) = match state {
+        Ok(Poller::new(
+            move |poller_state: PollerState<Progress>, poller_options| {
+                let (mut request, progress) = match poller_state {
                     PollerState::More(progress) => {
                         let mut next_link = progress.next_link.clone();
                         let mut query_builder = next_link.query_builder();
@@ -128,7 +128,7 @@ impl LargeHeaderLargeHeadersClient {
                 };
                 let ctx = poller_options.context.clone();
                 let pipeline = pipeline.clone();
-                async move {
+                Box::pin(async move {
                     let rsp = pipeline
                         .send(
                             &ctx,
@@ -168,7 +168,7 @@ impl LargeHeaderLargeHeadersClient {
                         PollerStatus::InProgress => PollerResult::InProgress {
                             response: rsp,
                             retry_after,
-                            next: Progress {
+                            continuation_token: Progress {
                                 next_link,
                                 final_link,
                             },
@@ -185,7 +185,7 @@ impl LargeHeaderLargeHeadersClient {
                         },
                         _ => PollerResult::Done { response: rsp },
                     })
-                }
+                })
             },
             Some(options.method_options),
         ))
