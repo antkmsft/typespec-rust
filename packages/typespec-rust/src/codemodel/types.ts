@@ -155,7 +155,7 @@ export interface DiscriminatedUnion {
 }
 
 /** DiscriminatedUnionKind contains the kinds of discriminated unions */
-export type DiscriminatedUnionKind = DiscriminatedUnionBase | DiscriminatedUnionEnvelope;
+export type DiscriminatedUnionKind = DiscriminatedUnionBase | DiscriminatedUnionEnvelope | DiscriminatedUnionSealed;
 
 /** DiscriminatedUnionMember is a tagged enum member for a specific DiscriminatedUnion */
 export interface DiscriminatedUnionMember {
@@ -185,6 +185,11 @@ export interface DiscriminatedUnionEnvelope {
 
   /** data envelope property name */
   envelopeName: string;
+}
+
+/** DiscriminatedUnionSealed indicates that the union doesn't revert to the base type for unknown discriminants. */
+export interface DiscriminatedUnionSealed {
+  kind: 'discriminatedUnionSealed';
 }
 
 /** Etag is an azure_core::Etag */
@@ -314,6 +319,9 @@ export enum ModelFieldFlags {
 
   /** deserialize an empty string as None for Option<String> */
   DeserializeEmptyStringAsNone = 2,
+
+  /** field is the discriminator in a discriminated union */
+  Discriminator = 4,
 }
 
 /** ModelFlags contains bit flags describing model usage */
@@ -325,6 +333,9 @@ export enum ModelFlags {
 
   /** model is used as output from a method */
   Output = 2,
+
+  /** model is a sub-type in a polymorphic discriminated union */
+  PolymorphicSubtype = 4,
 }
 
 /** DateTimeEncoding is the wire format of the date/time */
@@ -849,6 +860,12 @@ export class DiscriminatedUnionMember implements DiscriminatedUnionMember {
     this.type = type;
     this.discriminantValue = discriminantValue;
     this.docs = {};
+  }
+}
+
+export class DiscriminatedUnionSealed implements DiscriminatedUnionSealed {
+  constructor() {
+    this.kind = 'discriminatedUnionSealed';
   }
 }
 

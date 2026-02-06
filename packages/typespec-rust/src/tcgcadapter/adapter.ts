@@ -191,6 +191,11 @@ export class Adapter {
       if (model.discriminatedSubtypes) {
         const rustUnion = this.getDiscriminatedUnion(model);
         this.crate.unions.push(rustUnion);
+
+        // we don't want to add the base type to the array
+        // of models to emit as we hijack its name to be used
+        // for the associated tagged enum type.
+        continue;
       }
 
       if (model.external) {
@@ -375,9 +380,7 @@ export class Adapter {
     const allProps = new Array<tcgc.SdkModelPropertyType>();
     for (const prop of model.properties) {
       if (prop.discriminator && !model.discriminatedSubtypes) {
-        // omit the discriminator field from child types
-        // as it's not very useful (or necessary)
-        continue;
+        rustModel.flags |= rust.ModelFlags.PolymorphicSubtype;
       }
       allProps.push(prop);
     }
@@ -456,7 +459,7 @@ export class Adapter {
       throw new AdapterError('InternalError', 'unnamed union', src.__raw?.node);
     }
 
-    const unionName = src.kind === 'model' ? `${utils.capitalize(src.name)}Kind` : utils.capitalize(src.name);
+    const unionName = utils.deconstruct(src.name).map((each) => utils.capitalize(each)).join('');
     const keyName = `discriminated-union-${unionName}`;
     let rustUnion = this.types.get(keyName);
     if (rustUnion) {
@@ -473,19 +476,25 @@ export class Adapter {
         }
 
         // find the discriminator field
-        let discriminatorPropertyName: string | undefined;
+        let discriminatorProperty: tcgc.SdkModelPropertyType | undefined;
         for (const prop of src.properties) {
           if (prop.kind === 'property' && prop.discriminator) {
-            discriminatorPropertyName = prop.name;
+            discriminatorProperty = prop;
             break;
           }
         }
-        if (!discriminatorPropertyName) {
+        if (!discriminatorProperty) {
           throw new AdapterError('InternalError', `failed to find discriminator field for type ${src.name}`, src.__raw?.node);
         }
 
-        rustUnion = new rust.DiscriminatedUnion(unionName, adaptAccessFlags(src.access), discriminatorPropertyName);
-        rustUnion.unionKind = new rust.DiscriminatedUnionBase(this.getModel(src));
+        rustUnion = new rust.DiscriminatedUnion(unionName, adaptAccessFlags(src.access), discriminatorProperty.name);
+        if (discriminatorProperty.type.kind === 'enum' && discriminatorProperty.type.isFixed) {
+          // when the DU is a fixed enum, it means we don't fall back to the
+          // base type when the discriminator value is unknown or missing.
+          rustUnion.unionKind = new rust.DiscriminatedUnionSealed();
+        } else {
+          rustUnion.unionKind = new rust.DiscriminatedUnionBase(this.getModel(src));
+        }
 
         for (const subType of Object.values(src.discriminatedSubtypes)) {
           if (!subType.discriminatorValue) {
@@ -635,6 +644,8 @@ export class Adapter {
 
     if (property.decorators.find((decorator) => decorator.name === 'Azure.ClientGenerator.Core.@deserializeEmptyStringAsNull') !== undefined) {
       modelField.flags |= rust.ModelFieldFlags.DeserializeEmptyStringAsNone;
+    } else if (property.kind === 'property' && property.discriminator) {
+      modelField.flags |= rust.ModelFieldFlags.Discriminator;
     }
 
     return modelField;
