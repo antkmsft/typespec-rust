@@ -856,99 +856,102 @@ async fn create_or_update() {
         },
     });
 
-    let mut poller = client
-        .create_or_update(
-            RESOURCE_GROUP.trim_start_matches('/'),
-            "extension",
-            create_or_update_request.clone(),
-            options.clone(),
-        )
-        .unwrap();
+    for resource_prefix in [RESOURCE_GROUP, SUBSCRIPTION, "", RESOURCE] {
+        let mut poller = client
+            .create_or_update(
+                resource_prefix.trim_start_matches('/'),
+                "extension",
+                create_or_update_request.clone(),
+                options.clone(),
+            )
+            .unwrap();
 
-    let mut poll_count = 0;
-    while let Some(result) = poller.next().await {
-        poll_count += 1;
-        let response = result.unwrap();
-        let http_status = response.status();
-        let status_monitor = response.into_model().unwrap();
-        let poller_status = status_monitor.status();
-        match poll_count {
-            1 => {
-                assert_eq!(http_status, StatusCode::Ok);
-                assert_eq!(poller_status, PollerStatus::Succeeded);
-            }
-            _ => {
-                panic!("unexpected poll count");
+        let mut poll_count = 0;
+        while let Some(result) = poller.next().await {
+            poll_count += 1;
+            let response = result.unwrap();
+            let http_status = response.status();
+            let status_monitor = response.into_model().unwrap();
+            let poller_status = status_monitor.status();
+            match poll_count {
+                1 => {
+                    assert_eq!(http_status, StatusCode::Ok);
+                    assert_eq!(poller_status, PollerStatus::Succeeded);
+                }
+                _ => {
+                    panic!("unexpected poll count");
+                }
             }
         }
+        assert_eq!(poll_count, 1);
+
+        let poller = client
+            .create_or_update(
+                resource_prefix.trim_start_matches('/'),
+                "extension",
+                create_or_update_request.clone(),
+                options.clone(),
+            )
+            .unwrap();
+
+        let final_result = poller.await.unwrap().into_model().unwrap();
+
+        assert_eq!(
+            final_result.id,
+            Some(format!(
+                "{resource_prefix}/providers/Azure.ResourceManager.Resources/extensionsResources/extension",
+            ))
+        );
+        assert_eq!(final_result.name, Some("extension".to_string()));
+        assert_eq!(
+            final_result.type_prop,
+            Some("Azure.ResourceManager.Resources/extensionsResources".to_string())
+        );
+
+        assert!(final_result.properties.is_some());
+        assert_eq!(
+            final_result.properties.as_ref().unwrap().provisioning_state,
+            Some(ProvisioningState::Succeeded)
+        );
+        assert_eq!(
+            final_result.properties.as_ref().unwrap().description,
+            Some("valid".to_string())
+        );
+
+        assert!(final_result.system_data.is_some());
+        assert_eq!(
+            final_result.system_data.as_ref().unwrap().created_by,
+            Some("AzureSDK".to_string())
+        );
+        assert_eq!(
+            final_result.system_data.as_ref().unwrap().created_by_type,
+            Some(CreatedByType::User)
+        );
+        assert_eq!(
+            final_result.system_data.as_ref().unwrap().created_at,
+            Some(OffsetDateTime::new_utc(
+                Date::from_calendar_date(2024, Month::October, 4).unwrap(),
+                Time::from_hms_milli(0, 56, 7, 442).unwrap(),
+            ))
+        );
+        assert_eq!(
+            final_result.system_data.as_ref().unwrap().last_modified_by,
+            Some("AzureSDK".to_string())
+        );
+        assert_eq!(
+            final_result
+                .system_data
+                .as_ref()
+                .unwrap()
+                .last_modified_by_type,
+            Some(CreatedByType::User)
+        );
+        assert_eq!(
+            final_result.system_data.as_ref().unwrap().last_modified_at,
+            Some(OffsetDateTime::new_utc(
+                Date::from_calendar_date(2024, Month::October, 4).unwrap(),
+                Time::from_hms_milli(0, 56, 7, 442).unwrap(),
+            ))
+        );
     }
-    assert_eq!(poll_count, 1);
-
-    let poller = client
-        .create_or_update(
-            RESOURCE_GROUP.trim_start_matches('/'),
-            "extension",
-            create_or_update_request,
-            options,
-        )
-        .unwrap();
-    let final_result = poller.await.unwrap().into_model().unwrap();
-
-    assert_eq!(
-        final_result.id,
-        Some(format!(
-            "{RESOURCE_GROUP}/providers/Azure.ResourceManager.Resources/extensionsResources/extension",
-        ))
-    );
-    assert_eq!(final_result.name, Some("extension".to_string()));
-    assert_eq!(
-        final_result.type_prop,
-        Some("Azure.ResourceManager.Resources/extensionsResources".to_string())
-    );
-
-    assert!(final_result.properties.is_some());
-    assert_eq!(
-        final_result.properties.as_ref().unwrap().provisioning_state,
-        Some(ProvisioningState::Succeeded)
-    );
-    assert_eq!(
-        final_result.properties.as_ref().unwrap().description,
-        Some("valid".to_string())
-    );
-
-    assert!(final_result.system_data.is_some());
-    assert_eq!(
-        final_result.system_data.as_ref().unwrap().created_by,
-        Some("AzureSDK".to_string())
-    );
-    assert_eq!(
-        final_result.system_data.as_ref().unwrap().created_by_type,
-        Some(CreatedByType::User)
-    );
-    assert_eq!(
-        final_result.system_data.as_ref().unwrap().created_at,
-        Some(OffsetDateTime::new_utc(
-            Date::from_calendar_date(2024, Month::October, 4).unwrap(),
-            Time::from_hms_milli(0, 56, 7, 442).unwrap(),
-        ))
-    );
-    assert_eq!(
-        final_result.system_data.as_ref().unwrap().last_modified_by,
-        Some("AzureSDK".to_string())
-    );
-    assert_eq!(
-        final_result
-            .system_data
-            .as_ref()
-            .unwrap()
-            .last_modified_by_type,
-        Some(CreatedByType::User)
-    );
-    assert_eq!(
-        final_result.system_data.as_ref().unwrap().last_modified_at,
-        Some(OffsetDateTime::new_utc(
-            Date::from_calendar_date(2024, Month::October, 4).unwrap(),
-            Time::from_hms_milli(0, 56, 7, 442).unwrap(),
-        ))
-    );
 }
