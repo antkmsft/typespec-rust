@@ -54,7 +54,7 @@ impl StatusMonitor for OperationTemplatesLroClientDeleteOperationStatus {
 }
 
 impl StatusMonitor for OperationTemplatesLroClientExportArrayOperationStatus {
-    type Output = ();
+    type Output = Vec<ExportResult>;
     type Format = JsonFormat;
     fn status(&self) -> PollerStatus {
         match &self.status {

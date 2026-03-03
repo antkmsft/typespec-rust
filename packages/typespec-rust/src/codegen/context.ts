@@ -19,7 +19,7 @@ export class Context {
   private readonly tryFromForRequestTypes = new Map<string, rust.PayloadFormat>();
   private readonly pagedResponseTypes = new Set<rust.Model>();
   private readonly lroStatusTypes = new Set<rust.Model>();
-  private readonly lroResultTypes = new Map<rust.Model, rust.Model>();
+  private readonly lroResultTypes = new Map<rust.Model, rust.WireType>();
 
   /**
    * instantiates a new Context for the provided crate
@@ -280,7 +280,7 @@ export class Context {
 
     const indent = new helpers.indentation();
 
-    const outputType = resultType !== undefined ? helpers.getTypeDeclaration(helpers.unwrapType(resultType)) : '()';
+    const outputType = resultType !== undefined ? helpers.getTypeDeclaration(resultType) : '()';
     let content = `impl StatusMonitor for ${model.name} {\n`;
     content += `${indent.get()}type Output = ${outputType};\n`;
     content += `${indent.get()}type Format = ${formatType};\n`;

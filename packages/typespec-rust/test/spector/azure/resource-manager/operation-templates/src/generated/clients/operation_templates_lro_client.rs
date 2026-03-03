@@ -710,7 +710,10 @@ impl OperationTemplatesLroClient {
                             }),
                         )
                         .await?;
-                    let (status, headers, body) = rsp.deconstruct();
+                    let (status, headers, mut body) = rsp.deconstruct();
+                    if body.is_empty() {
+                        body = azure_core::http::response::ResponseBody::from_bytes("{}");
+                    }
                     let continuation = if let Some(operation_location) = headers
                         .get_optional_string(&HeaderName::from_static("azure-asyncoperation"))
                     {

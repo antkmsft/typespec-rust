@@ -402,7 +402,7 @@ export interface Poller extends External {
   kind: 'poller';
 
   /** the model containing the result of a long-running-operation */
-  resultType?: Response<Model, Exclude<PayloadFormatType, 'NoFormat'>>;
+  resultType?: Response<WireType, Exclude<PayloadFormatType, 'NoFormat'>>;
 
   /** the model containing the status of a long-running-operation */
   type: Response<Model, Exclude<PayloadFormatType, 'NoFormat'>>;

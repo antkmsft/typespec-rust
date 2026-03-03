@@ -621,7 +621,7 @@ export class Adapter {
    */
   private getModelField(modelFlags: tcgc.UsageFlags, property: tcgc.SdkModelPropertyType | tcgc.SdkPathParameter, modelVisibility: rust.Visibility, stack: Array<rust.Type>): rust.ModelField {
     const fieldNeedsBoxing = function(fieldType: rust.Type): fieldType is rust.WireType {
-      if (fieldType.kind === 'model' && stack.includes(fieldType)) {
+      if (fieldType.kind === 'model' && (stack.includes(fieldType))) {
         // if the field's type is a model and it's in the type stack then
         // box it. this is to avoid infinitely recursive type definitions.
         return true;
@@ -814,6 +814,8 @@ export class Adapter {
           return this.getExternalType(type.external);
         } else if (type.discriminatedSubtypes) {
           return this.getDiscriminatedUnion(type);
+        } else if (tcgc.isAzureCoreModel(type)) {
+          return this.getExternalType({kind: 'externalTypeInfo', identity: 'azure_core::Error'});
         }
         return this.getModel(type, stack);
       case 'endpoint':
@@ -1823,40 +1825,52 @@ export class Adapter {
       // default to nextLink. will update it as required when we have that info
       rustMethod.returns = new rust.Result(this.crate, new rust.Pager(this.crate, new rust.Response(this.crate, synthesizedModel, responseFormat), 'nextLink'));
     } else if (method.kind === 'lro') {
+      const pushModels = (
+        tcgcType: tcgc.SdkType,
+        crate: rust.Crate,
+        rustType: rust.Type = this.getType(tcgcType),
+        ignoreAzureCoreModels: boolean = true
+      ): void => {
+        switch (tcgcType.kind) {
+          case 'array':
+            pushModels(tcgcType.valueType, crate);
+            return;
+          case 'model':
+            if (ignoreAzureCoreModels && tcgc.isAzureCoreModel(tcgcType)) {
+              return;
+            }
+            break;
+          default:
+            return;
+        }
+
+        if (rustType.kind !== 'model' || crate.models.some(m => m === rustType)) {
+          return;
+        }
+
+        crate.models.push(rustType);
+
+        for (const tcgcField of tcgcType.properties) {
+          pushModels(tcgcField.type,crate);
+        }
+      }
+
       const format = responseFormat === 'NoFormat' ? 'JsonFormat' : responseFormat
 
-      const statusType = this.typeToWireType(
-        this.getModel(method.lroMetadata.pollingInfo.responseModel, undefined, `${rustClient.name}${utils.pascalCase(rustMethod.name, false)}OperationStatus`));
+      const statusModel = this.getModel(method.lroMetadata.pollingInfo.responseModel, undefined, `${rustClient.name}${utils.pascalCase(rustMethod.name, false)}OperationStatus`);
+      const statusType = this.typeToWireType(statusModel);
 
       if (statusType.kind !== 'model') {
         throw new AdapterError('InternalError', `status type for an LRO method '${method.name}' is not a model`, method.__raw?.node);
       }
-      const pushModels = (model: rust.Model, crate: rust.Crate): void => {
-        if (crate.models.some(m => m === model)) {
-          return;
-        }
 
-        crate.models.push(model);
-        for (const field of model.fields) {
-          let fieldType = field.type;
-          fieldType = fieldType.kind === 'option' ? fieldType.type : fieldType;
-          fieldType = fieldType.kind === 'Vec' ? fieldType.type : fieldType;
-          if (fieldType.kind === 'model') {
-            pushModels(fieldType, crate);
-          }
-        }
-      }
-
-      pushModels(statusType, this.crate);
+      pushModels(method.lroMetadata.pollingInfo.responseModel, this.crate, statusModel, false);
 
       const poller = new rust.Poller(this.crate, new rust.Response(this.crate, statusType, format));
-      if (method.response.type?.kind === "model") {
-        const responseType = this.typeToWireType(this.getModel(method.response.type));
-        if (responseType.kind !== 'model') {
-          throw new AdapterError('InternalError', `response type for an LRO method '${method.name}' is not a model`, method.__raw?.node);
-        }
-        pushModels(responseType, this.crate);
-        poller.resultType = new rust.Response(this.crate, responseType, format);
+      if (method.response.type) {
+        const resultType = this.getType(method.response.type);
+        pushModels(method.response.type, this.crate, resultType);
+        poller.resultType = new rust.Response(this.crate, this.typeToWireType(resultType), format);
       }
 
       rustMethod.returns = new rust.Result(this.crate, poller);

@@ -17,9 +17,9 @@ use time::{Date, Month, Time};
 use futures::StreamExt;
 
 use spector_armoptemplates::models::{
-    CreatedByType, ExportRequest, OperationTemplatesLroClientCreateOrReplaceOptions,
-    OperationTemplatesLroClientDeleteOptions, OperationTemplatesLroClientExportOptions, Order,
-    OrderProperties,
+    CreatedByType, ExportRequest, ExportResult, OperationTemplatesLroClientCreateOrReplaceOptions,
+    OperationTemplatesLroClientDeleteOptions, OperationTemplatesLroClientExportArrayOptions,
+    OperationTemplatesLroClientExportOptions, Order, OrderProperties,
 };
 
 #[tokio::test]
@@ -240,7 +240,7 @@ async fn lro_client_export() {
     assert_eq!(final_result.content, Some("order1,product1,1".to_string()));
 }
 
-/*#[tokio::test]
+#[tokio::test]
 async fn lro_client_export_array() {
     let client = common::create_client().get_operation_templates_lro_client();
 
@@ -299,4 +299,4 @@ async fn lro_client_export_array() {
         final_result[1].content,
         Some("order2,product2,2".to_string())
     );
-}*/
+}
