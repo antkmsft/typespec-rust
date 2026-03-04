@@ -815,7 +815,7 @@ export class Adapter {
         } else if (type.discriminatedSubtypes) {
           return this.getDiscriminatedUnion(type);
         } else if (tcgc.isAzureCoreModel(type)) {
-          return this.getExternalType({kind: 'externalTypeInfo', identity: 'azure_core::Error'});
+          return this.getExternalType({kind: 'externalTypeInfo', identity: 'azure_core::error::ErrorDetail'});
         }
         return this.getModel(type, stack);
       case 'endpoint':
