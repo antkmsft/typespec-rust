@@ -75,17 +75,17 @@ function emitModelDefinitions(crate: rust.Crate, context: Context): helpers.Modu
       continue;
     }
 
-    const hasAureErrorDetailFields = function(type: rust.Type): boolean {
+    const hasAzureErrorDetailFields = function(type: rust.Type): boolean {
       switch (type.kind) {
         case 'model':
           for (const field of type.fields) {
-            if (hasAureErrorDetailFields(field.type)) {
+            if (hasAzureErrorDetailFields(field.type)) {
               return true;
             }
           }
           break;
         case 'option':
-          if (hasAureErrorDetailFields(type.type)) {
+          if (hasAzureErrorDetailFields(type.type)) {
             return true;
           }
           break;
@@ -98,7 +98,7 @@ function emitModelDefinitions(crate: rust.Crate, context: Context): helpers.Modu
 
       return false;
     }
-    const isOperationStatus = hasAureErrorDetailFields(model);
+    const isOperationStatus = hasAzureErrorDetailFields(model);
 
     // we add this here to avoid using serde for marker-only models
     use.add('serde', 'Deserialize');
