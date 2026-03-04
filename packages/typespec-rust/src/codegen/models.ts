@@ -120,7 +120,7 @@ function emitModelDefinitions(crate: rust.Crate, context: Context): helpers.Modu
     // when the type contains something that doesn't have a
     // default impl (e.g. enum types).
     if (isOperationStatus) {
-      body += `#[derive(Default, Deserialize, SafeDebug)]`
+      body += `#[derive(Default, Deserialize, SafeDebug)]\n`;
     } else {
       body += helpers.annotationDerive(!hasXmlAddlProps, model.flags !== rust.ModelFlags.Unspecified ? 'Default' : '');
     }
