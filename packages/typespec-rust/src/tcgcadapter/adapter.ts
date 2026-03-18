@@ -1907,7 +1907,20 @@ export class Adapter {
               // https://github.com/microsoft/typespec/blob/f3d792b252c6f40be0e174496d9f34d453676026/packages/http-client-csharp/emitter/src/type/operation-final-state-via.ts#L23-L27
               lroFinalResultStrategy = new rust.LroFinalResultStrategyHeader('operation-location');
               break;
+            case FinalStateValue.customLink:
+              if (method.lroMetadata.statusMonitorStep?.kind === "nextOperationLink") {
+                const customHeaderName = method.lroMetadata.statusMonitorStep.target.property.name;
+                if (customHeaderName.trim() === '') {
+                  throw new AdapterError('UnsupportedTsp', `lroMetadata.finalStateVia === customLink && customHeaderName === "${customHeaderName}"`, method.__raw?.node);
+                }
+
+                lroFinalResultStrategy = new rust.LroFinalResultStrategyHeader(customHeaderName);
+              } else {
+                throw new AdapterError('UnsupportedTsp', `lroMetadata.finalStateVia === customLink && lroMetadata.statusMonitorStep?.kind === "${method.lroMetadata.statusMonitorStep?.kind}"`, method.__raw?.node);
+              }
+              break;
             default:
+              /* eslint-disable-next-line @typescript-eslint/restrict-template-expressions */
               throw new AdapterError('UnsupportedTsp', `lroMetadata.finalStateVia ${method.lroMetadata.finalStateVia} NYI`, method.__raw?.node);
           }
 
