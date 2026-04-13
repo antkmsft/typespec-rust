@@ -1,6 +1,10 @@
 # Release History
 
-## 0.39.1 (unreleased)
+## 0.39.1 (2026-04-12)
+
+### Features Added
+
+* Changed the `allowEmpty` `@clientOption` decorator to `minLength`.
 
 ### Bugs Fixed
 
